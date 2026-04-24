@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Noticias — Furious Industries RP</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<nav class="navbar" id="navbar">
+  <div class="nav-container">
+    <div class="nav-logo">
+      <a href="/" class="nav-logo-link">
+        <img src="/img/logo.png" class="nav-logo-img" alt="Furious Industries" onerror="this.outerHTML='<span class=\'logo-icon\'>⚡</span><span>FURIOUS <span class=\'logo-accent\'>INDUSTRIES</span></span>'">
+      </a>
+    </div>
+    <div class="nav-links" id="navLinks">
+      <a href="/">Inicio</a>
+      <a href="/equipo">Equipo</a>
+      <a href="/facciones">Facciones</a>
+      <a href="/noticias" style="color:var(--primary)">Noticias</a>
+      <a href="/reglas">Reglas</a>
+      <a href="/foro">Foro</a>
+      <a href="/tienda">Tienda</a>
+      <a href="#" id="navDiscord" target="_blank" rel="noopener" style="color:#5865f2">Discord</a>
+      <a href="/registro">Registro</a>
+      <a href="/admin/login" class="nav-admin">⚙ Admin</a>
+    </div>
+    <button class="nav-join-btn" onclick="copyServerIP()">CONECTAR</button>
+    <button class="nav-mobile-toggle" id="mobileToggle" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<section class="page-hero">
+  <div class="container">
+    <div class="page-hero-badge">Furious Industries RP</div>
+    <h1>NOTICIAS</h1>
+    <p>Mantente al día con las últimas actualizaciones, eventos y anuncios del servidor.</p>
+  </div>
+</section>
+
+<section class="news-section" style="padding:80px 0 100px;">
+  <div class="container">
+    <div class="news-filter" id="newsFilter">
+      <button class="filter-btn active" data-filter="all">Todas</button>
+      <button class="filter-btn" data-filter="general">General</button>
+      <button class="filter-btn" data-filter="update">Actualizaciones</button>
+      <button class="filter-btn" data-filter="event">Eventos</button>
+      <button class="filter-btn" data-filter="urgent">Urgente</button>
+    </div>
+    <div class="news-grid" id="newsGrid">
+      <div style="grid-column:1/-1;text-align:center;padding:80px;color:var(--muted);">Cargando noticias...</div>
+    </div>
+  </div>
+</section>
+
+<!-- News Modal -->
+<div class="modal-overlay" id="newsModal">
+  <div class="modal">
+    <button class="modal-close" id="modalClose">✕</button>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <span class="logo-icon">⚡</span>
+          <span>FURIOUS <span class="logo-accent">INDUSTRIES</span></span>
+        </div>
+        <p>El servidor de roleplay más intenso e inmersivo. Construye tu historia en un mundo sin límites donde cada decisión importa.</p>
+        <div class="footer-social">
+          <a href="#" class="social-link" id="discordFooterLink">Discord</a>
+          <a href="#" class="social-link">YouTube</a>
+          <a href="#" class="social-link">Instagram</a>
+        </div>
+      </div>
+      <div class="footer-links">
+        <h4>Servidor</h4>
+        <ul>
+          <li><a href="/equipo">Equipo</a></li>
+          <li><a href="/facciones">Facciones</a></li>
+          <li><a href="/noticias">Noticias</a></li>
+          <li><a href="/reglas">Reglas</a></li>
+          <li><a href="/foro">Foro</a></li>
+          <li><a href="/tienda">Tienda</a></li>
+        </ul>
+      </div>
+      <div class="footer-links">
+        <h4>Acceso</h4>
+        <ul>
+          <li><a href="#" onclick="copyServerIP();return false;">Conectar al Servidor</a></li>
+          <li><a href="/admin/login">Panel Admin</a></li>
+          <li><a href="#" id="discordFooterLink2">Discord</a></li>
+        </ul>
+      </div>
+      <div class="footer-server">
+        <h4>Estado del Servidor</h4>
+        <div class="server-status">
+          <div class="status-indicator active"></div>
+          <span>Servidor Online</span>
+        </div>
+        <div class="server-info">IP: <code id="serverIPDisplay">Cargando...</code></div>
+        <button class="footer-connect-btn" onclick="copyServerIP()">COPIAR IP</button>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2024 Furious Industries RP. Todos los derechos reservados.</p>
+      <p>No afiliado con Rockstar Games ni Take-Two Interactive.</p>
+    </div>
+  </div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  let serverIP = 'play.furiousin.com:30120';
+  let allNews = [];
+  let currentFilter = 'all';
+
+  const catLabels  = { general:'General', update:'Actualización', event:'Evento', urgent:'⚠ Urgente' };
+  const catColors  = { general:'general', update:'update', event:'event', urgent:'urgent' };
+
+  function esc(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function formatDate(dateStr) {
+    if (!dateStr) return '';
+    return new Date(dateStr).toLocaleDateString('es-ES', { day:'2-digit', month:'short', year:'numeric' });
+  }
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+  function copyServerIP() {
+    navigator.clipboard.writeText(serverIP).then(() => showToast('✓ IP copiada: ' + serverIP)).catch(() => showToast('IP: ' + serverIP));
+  }
+
+  async function loadStats() {
+    try {
+      const { data } = await fetch('/api/stats').then(r => r.json());
+      serverIP = data.server_ip + ':' + data.server_port;
+      const ip = document.getElementById('serverIPDisplay');
+      if (ip) ip.textContent = serverIP;
+      ['navDiscord','discordFooterLink','discordFooterLink2'].forEach(id => {
+        const a = document.getElementById(id);
+        if (a) a.href = data.discord_url || '#';
+      });
+    } catch (_) {}
+  }
+
+  async function loadNews() {
+    try {
+      const { data } = await fetch('/api/news?limit=50').then(r => r.json());
+      allNews = data;
+      renderNews();
+    } catch (_) {
+      document.getElementById('newsGrid').innerHTML = '<p style="grid-column:1/-1;text-align:center;color:var(--muted);padding:60px;">Error al cargar noticias.</p>';
+    }
+  }
+
+  function renderNews() {
+    const filtered = currentFilter === 'all' ? allNews : allNews.filter(n => n.category === currentFilter);
+    const grid = document.getElementById('newsGrid');
+    if (!filtered.length) {
+      grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:var(--muted);padding:60px;">No hay noticias en esta categoría.</p>';
+      return;
+    }
+    grid.innerHTML = filtered.map(n => `
+      <article class="news-card fade-in" onclick="openNewsModal(${n.id})">
+        <div class="news-card-header">
+          <span class="news-category ${catColors[n.category] || 'general'}">${catLabels[n.category] || n.category}</span>
+          <div class="news-title">${esc(n.title)}</div>
+          <p class="news-excerpt">${esc(n.excerpt || '')}</p>
+        </div>
+        <div class="news-card-footer">
+          <div class="news-meta">
+            <span>${esc(n.author)}</span>
+            <span>${formatDate(n.created_at)}</span>
+            <span>👁 ${n.views}</span>
+          </div>
+          <span class="news-read-more">Leer más →</span>
+        </div>
+      </article>
+    `).join('');
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.05 });
+    grid.querySelectorAll('.fade-in').forEach(el => obs.observe(el));
+  }
+
+  async function openNewsModal(id) {
+    try {
+      const { data } = await fetch(`/api/news/${id}`).then(r => r.json());
+      document.getElementById('modalContent').innerHTML = `
+        <div class="modal-news-category">
+          <span class="news-category ${catColors[data.category] || 'general'}">${catLabels[data.category] || data.category}</span>
+        </div>
+        <div class="modal-news-title">${esc(data.title)}</div>
+        <div class="modal-news-meta">Por ${esc(data.author)} · ${formatDate(data.created_at)} · ${data.views} vistas</div>
+        <div class="modal-news-content">${data.content || ''}</div>
+      `;
+      document.getElementById('newsModal').classList.add('active');
+      document.body.style.overflow = 'hidden';
+    } catch (_) { showToast('Error al cargar la noticia'); }
+  }
+
+  function closeModal() {
+    document.getElementById('newsModal').classList.remove('active');
+    document.body.style.overflow = '';
+  }
+
+  document.getElementById('modalClose').addEventListener('click', closeModal);
+  document.getElementById('newsModal').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeModal();
+  });
+
+  document.querySelectorAll('#newsFilter .filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#newsFilter .filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentFilter = btn.dataset.filter;
+      renderNews();
+    });
+  });
+
+  window.addEventListener('scroll', () => {
+    document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
+  }, { passive: true });
+  document.getElementById('mobileToggle').addEventListener('click', () => {
+    document.getElementById('navLinks').classList.toggle('open');
+  });
+
+  loadStats();
+  loadNews();
+</script>
+<script src="/js/user-nav.js"></script>
+</body>
+</html>

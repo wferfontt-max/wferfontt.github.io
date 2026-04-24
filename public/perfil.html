@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi Perfil — Furious Industries RP</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .profile-hero { padding: 100px 20px 50px; text-align: center; border-bottom: 1px solid #1e1e30; background: linear-gradient(180deg, rgba(6,6,12,0.85) 0%, rgba(10,6,2,0.85) 100%); position: relative; }
+    .profile-hero::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 0%, rgba(255,69,0,0.1) 0%, transparent 65%); pointer-events: none; }
+    .avatar-wrap { position: relative; display: inline-block; margin-bottom: 20px; }
+    .profile-avatar { width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 3px solid rgba(255,69,0,0.5); background: #1e1e30; font-size: 3rem; display: flex; align-items: center; justify-content: center; }
+    .avatar-edit-btn { position: absolute; bottom: 4px; right: 4px; width: 30px; height: 30px; border-radius: 50%; background: #ff4500; border: none; cursor: pointer; font-size: 0.75rem; color: #fff; display: flex; align-items: center; justify-content: center; transition: background .2s; }
+    .avatar-edit-btn:hover { background: #ff6528; }
+    #avatarInput { display: none; }
+    .profile-name { font-family: 'Orbitron', sans-serif; font-size: 1.8rem; font-weight: 700; color: #fff; margin-bottom: 6px; }
+    .profile-email { font-size: 0.85rem; color: #5a5a72; margin-bottom: 20px; }
+    .profile-dates { display: flex; gap: 32px; justify-content: center; flex-wrap: wrap; }
+    .profile-date-item { text-align: center; }
+    .profile-date-label { font-size: 0.7rem; letter-spacing: .1em; color: #5a5a72; text-transform: uppercase; margin-bottom: 4px; }
+    .profile-date-value { font-size: 0.9rem; font-weight: 600; color: #8888aa; }
+
+    .profile-body { max-width: 860px; margin: 0 auto; padding: 40px 20px 60px; }
+
+    /* Stats */
+    .profile-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 40px; }
+    .stat-card { background: rgba(11,11,22,0.9); border: 1px solid #1e1e30; border-radius: 10px; padding: 20px; text-align: center; }
+    .stat-value { font-family: 'Orbitron', sans-serif; font-size: 1.6rem; font-weight: 700; color: #ff4500; margin-bottom: 4px; }
+    .stat-label { font-size: 0.75rem; color: #5a5a72; text-transform: uppercase; letter-spacing: .08em; }
+
+    /* Section headings */
+    .prof-section-title { font-family: 'Orbitron', sans-serif; font-size: 0.9rem; font-weight: 700; color: #fff; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
+    .prof-section-title::after { content: ''; flex: 1; height: 1px; background: #1e1e30; }
+
+    /* Purchases */
+    .purchase-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 40px; }
+    .purchase-row { display: flex; align-items: center; gap: 16px; background: rgba(11,11,22,0.9); border: 1px solid #1e1e30; border-radius: 8px; padding: 14px 18px; }
+    .purchase-icon { font-size: 1.4rem; flex-shrink: 0; }
+    .purchase-info { flex: 1; min-width: 0; }
+    .purchase-name { font-size: 0.9rem; font-weight: 600; color: #fff; }
+    .purchase-date { font-size: 0.75rem; color: #5a5a72; margin-top: 2px; }
+    .purchase-price { font-family: 'Orbitron', sans-serif; font-size: 0.95rem; font-weight: 700; color: #ff4500; white-space: nowrap; }
+    .purchase-status { padding: 3px 10px; border-radius: 12px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; }
+    .status-completed { background: rgba(22,163,74,.15); color: #4ade80; border: 1px solid rgba(22,163,74,.3); }
+    .status-pending { background: rgba(234,179,8,.12); color: #facc15; border: 1px solid rgba(234,179,8,.3); }
+    .status-failed { background: rgba(220,38,38,.12); color: #f87171; border: 1px solid rgba(220,38,38,.3); }
+    .empty-msg { text-align: center; padding: 40px; color: #5a5a72; font-size: 0.9rem; }
+    .empty-msg span { font-size: 2.5rem; display: block; margin-bottom: 12px; }
+
+    /* Edit form */
+    .edit-card { background: rgba(11,11,22,0.9); border: 1px solid #1e1e30; border-radius: 10px; padding: 28px; }
+    .edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media(max-width:600px) { .edit-grid { grid-template-columns: 1fr; } }
+    .form-group { margin-bottom: 0; }
+    .form-label { display: block; font-size: 0.75rem; font-weight: 600; color: #8888aa; margin-bottom: 7px; letter-spacing: .05em; text-transform: uppercase; }
+    .form-input { width: 100%; background: rgba(5,5,10,0.8); border: 1px solid #1e1e30; border-radius: 7px; padding: 10px 14px; font-size: 0.875rem; color: #fff; outline: none; transition: border-color .2s; box-sizing: border-box; }
+    .form-input:focus { border-color: rgba(255,69,0,.5); box-shadow: 0 0 0 3px rgba(255,69,0,.1); }
+    .save-btn { margin-top: 20px; padding: 11px 28px; background: #ff4500; color: #fff; font-family: 'Orbitron', sans-serif; font-size: 0.8rem; font-weight: 700; letter-spacing: .07em; border: none; border-radius: 7px; cursor: pointer; transition: all .2s; }
+    .save-btn:hover { background: #ff6528; }
+    .save-btn:disabled { opacity: .5; cursor: not-allowed; }
+    .discord-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(88,101,242,.12); border: 1px solid rgba(88,101,242,.3); border-radius: 8px; padding: 8px 14px; font-size: 0.82rem; color: #a5b4fc; margin-bottom: 28px; }
+  </style>
+</head>
+<body>
+<nav class="navbar" id="navbar">
+  <div class="nav-container">
+    <div class="nav-logo">
+      <a href="/" class="nav-logo-link">
+        <img src="/img/logo.png" class="nav-logo-img" alt="Furious Industries" onerror="this.outerHTML='<span class=\'logo-icon\'>⚡</span><span>FURIOUS <span class=\'logo-accent\'>INDUSTRIES</span></span>'">
+      </a>
+    </div>
+    <div class="nav-links" id="navLinks">
+      <a href="/">Inicio</a>
+      <a href="/equipo">Equipo</a>
+      <a href="/facciones">Facciones</a>
+      <a href="/noticias">Noticias</a>
+      <a href="/reglas">Reglas</a>
+      <a href="/foro">Foro</a>
+      <a href="/tienda">Tienda</a>
+      <a href="#" id="navDiscord" target="_blank" rel="noopener" style="color:#5865f2">Discord</a>
+      <a href="/registro">Registro</a>
+      <a href="/admin/login" class="nav-admin">⚙ Admin</a>
+    </div>
+    <button class="nav-mobile-toggle" id="mobileToggle" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- Hero / Avatar -->
+<section class="profile-hero" id="profileHero">
+  <div class="avatar-wrap">
+    <div class="profile-avatar" id="avatarDisplay">👤</div>
+    <button class="avatar-edit-btn" title="Cambiar foto" onclick="document.getElementById('avatarInput').click()">✎</button>
+    <input type="file" id="avatarInput" accept="image/*">
+  </div>
+  <div class="profile-name" id="profileName">Cargando...</div>
+  <div class="profile-email" id="profileEmail"></div>
+  <div class="profile-dates">
+    <div class="profile-date-item">
+      <div class="profile-date-label">Miembro desde</div>
+      <div class="profile-date-value" id="profileJoined">—</div>
+    </div>
+    <div class="profile-date-item">
+      <div class="profile-date-label">Última conexión</div>
+      <div class="profile-date-value" id="profileLastLogin">—</div>
+    </div>
+    <div class="profile-date-item" id="discordBadgeWrap" style="display:none;">
+      <div class="profile-date-label">Discord</div>
+      <div class="profile-date-value" id="profileDiscord">—</div>
+    </div>
+  </div>
+</section>
+
+<div class="profile-body">
+  <!-- Stats -->
+  <div class="profile-stats">
+    <div class="stat-card">
+      <div class="stat-value" id="statPurchases">0</div>
+      <div class="stat-label">Compras</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="statSpent">$0</div>
+      <div class="stat-label">Total gastado</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="statCompleted">0</div>
+      <div class="stat-label">Confirmadas</div>
+    </div>
+  </div>
+
+  <!-- Purchases -->
+  <div class="prof-section-title">HISTORIAL DE COMPRAS</div>
+  <div class="purchase-list" id="purchaseList">
+    <div class="empty-msg"><span>🛒</span>Cargando historial...</div>
+  </div>
+
+  <!-- Edit profile -->
+  <div class="prof-section-title" style="margin-top:16px;">EDITAR PERFIL</div>
+  <div class="edit-card">
+    <div id="discordConnected" class="discord-badge" style="display:none;">
+      💬 <span id="discordBadgeText"></span>
+    </div>
+    <div class="edit-grid">
+      <div class="form-group">
+        <label class="form-label">Nombre completo</label>
+        <input class="form-input" type="text" id="editName" placeholder="Tu nombre">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Correo electrónico</label>
+        <input class="form-input" type="email" id="editEmail" disabled>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Usuario Discord</label>
+        <input class="form-input" type="text" id="editDiscordUser" placeholder="usuario#0000">
+      </div>
+      <div class="form-group">
+        <label class="form-label">ID Discord</label>
+        <input class="form-input" type="text" id="editDiscordId" placeholder="123456789012345678">
+      </div>
+    </div>
+    <button class="save-btn" id="saveBtn" onclick="saveProfile()">GUARDAR CAMBIOS</button>
+  </div>
+</div>
+
+<footer style="background:rgba(3,3,7,0.95);border-top:1px solid #1e1e30;padding:30px 20px;text-align:center;">
+  <div style="font-family:'Orbitron',sans-serif;font-size:.85rem;color:#fff;margin-bottom:8px;">FURIOUS <span style="color:#ff4500">INDUSTRIES</span> RP</div>
+  <div style="font-size:.8rem;color:#5a5a72;">© 2024 Furious Industries RP. Todos los derechos reservados.</div>
+</footer>
+
+<div class="toast" id="toast"></div>
+<script>
+  let currentUser = null;
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    const nav = document.getElementById('navbar');
+    window.addEventListener('scroll', () => nav.classList.toggle('scrolled', window.scrollY > 50), { passive: true });
+    document.getElementById('mobileToggle').addEventListener('click', () => document.getElementById('navLinks').classList.toggle('open'));
+    fetch('/api/stats').then(r => r.json()).then(({ data }) => {
+      const d = document.getElementById('navDiscord'); if (d && data.discord_url) d.href = data.discord_url;
+    }).catch(() => {});
+
+    await loadProfile();
+
+    // Avatar upload
+    document.getElementById('avatarInput').addEventListener('change', async e => {
+      const file = e.target.files[0]; if (!file) return;
+      const fd = new FormData(); fd.append('avatar', file);
+      try {
+        const r = await fetch('/api/me/avatar', { method: 'POST', body: fd });
+        const d = await r.json();
+        if (r.ok) { renderAvatar(d.data.avatar_url); showToast('✓ Foto actualizada'); }
+        else showToast(d.error || 'Error al subir foto');
+      } catch (_) { showToast('Error de conexión'); }
+    });
+  });
+
+  async function loadProfile() {
+    const r = await fetch('/api/me');
+    if (!r.ok) { window.location.href = '/login?redirect=/perfil'; return; }
+    const { data } = await r.json();
+    currentUser = data;
+
+    // Hero
+    renderAvatar(data.avatar_url);
+    document.getElementById('profileName').textContent = data.full_name;
+    document.getElementById('profileEmail').textContent = data.email;
+    document.getElementById('profileJoined').textContent = fmtDate(data.created_at);
+    document.getElementById('profileLastLogin').textContent = data.last_login ? fmtDate(data.last_login) : 'Primera vez';
+    if (data.discord_username) {
+      document.getElementById('discordBadgeWrap').style.display = 'block';
+      document.getElementById('profileDiscord').textContent = data.discord_username;
+    }
+
+    // Stats
+    const completed = (data.purchases || []).filter(p => p.status === 'completed');
+    const spent = completed.reduce((s, p) => s + (p.item_price || 0), 0);
+    document.getElementById('statPurchases').textContent = data.purchases?.length || 0;
+    document.getElementById('statSpent').textContent = '$' + spent.toFixed(2);
+    document.getElementById('statCompleted').textContent = completed.length;
+
+    // Purchases
+    renderPurchases(data.purchases || []);
+
+    // Edit form pre-fill
+    document.getElementById('editName').value = data.full_name || '';
+    document.getElementById('editEmail').value = data.email || '';
+    document.getElementById('editDiscordUser').value = data.discord_username || '';
+    document.getElementById('editDiscordId').value = data.discord_id || '';
+    if (data.discord_username) {
+      document.getElementById('discordConnected').style.display = 'inline-flex';
+      document.getElementById('discordBadgeText').textContent = data.discord_username + (data.discord_id ? ' · ' + data.discord_id : '');
+    }
+  }
+
+  function renderAvatar(url) {
+    const el = document.getElementById('avatarDisplay');
+    if (url) el.innerHTML = `<img src="${esc(url)}" alt="avatar" style="width:110px;height:110px;border-radius:50%;object-fit:cover;" onerror="this.parentElement.textContent='👤'">`;
+    else el.textContent = '👤';
+  }
+
+  function renderPurchases(list) {
+    const el = document.getElementById('purchaseList');
+    if (!list.length) { el.innerHTML = '<div class="empty-msg"><span>🛒</span>Aún no tienes compras. <a href="/tienda" style="color:#ff4500">Visita la tienda</a></div>'; return; }
+    el.innerHTML = list.map(p => {
+      const sc = p.status === 'completed' ? 'status-completed' : p.status === 'failed' ? 'status-failed' : 'status-pending';
+      const sl = p.status === 'completed' ? 'Completada' : p.status === 'failed' ? 'Fallida' : 'Pendiente';
+      return `<div class="purchase-row">
+        <div class="purchase-icon">🛍️</div>
+        <div class="purchase-info">
+          <div class="purchase-name">${esc(p.item_name)}</div>
+          <div class="purchase-date">${fmtDate(p.created_at)}${p.completed_at ? ' · Confirmada ' + fmtDate(p.completed_at) : ''}</div>
+        </div>
+        <div class="purchase-price">$${parseFloat(p.item_price).toFixed(2)}</div>
+        <div class="purchase-status ${sc}">${sl}</div>
+      </div>`;
+    }).join('');
+  }
+
+  async function saveProfile() {
+    const btn = document.getElementById('saveBtn');
+    btn.disabled = true; btn.textContent = 'GUARDANDO...';
+    try {
+      const r = await fetch('/api/me', {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          full_name: document.getElementById('editName').value.trim(),
+          discord_username: document.getElementById('editDiscordUser').value.trim(),
+          discord_id: document.getElementById('editDiscordId').value.trim(),
+        }),
+      });
+      const d = await r.json();
+      if (r.ok) { showToast('✓ ' + d.message); await loadProfile(); }
+      else showToast(d.error || 'Error al guardar');
+    } catch (_) { showToast('Error de conexión'); }
+    finally { btn.disabled = false; btn.textContent = 'GUARDAR CAMBIOS'; }
+  }
+
+  function fmtDate(s) {
+    if (!s) return '—';
+    return new Date(s).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  }
+  function esc(s) { return s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : ''; }
+  function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
+</script>
+<script src="/js/user-nav.js"></script>
+</body>
+</html>

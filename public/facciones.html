@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Facciones — Furious Industries RP</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<nav class="navbar" id="navbar">
+  <div class="nav-container">
+    <div class="nav-logo">
+      <a href="/" class="nav-logo-link">
+        <img src="/img/logo.png" class="nav-logo-img" alt="Furious Industries" onerror="this.outerHTML='<span class=\'logo-icon\'>⚡</span><span>FURIOUS <span class=\'logo-accent\'>INDUSTRIES</span></span>'">
+      </a>
+    </div>
+    <div class="nav-links" id="navLinks">
+      <a href="/">Inicio</a>
+      <a href="/equipo">Equipo</a>
+      <a href="/facciones" style="color:var(--primary)">Facciones</a>
+      <a href="/noticias">Noticias</a>
+      <a href="/reglas">Reglas</a>
+      <a href="/foro">Foro</a>
+      <a href="/tienda">Tienda</a>
+      <a href="#" id="navDiscord" target="_blank" rel="noopener" style="color:#5865f2">Discord</a>
+      <a href="/registro">Registro</a>
+      <a href="/admin/login" class="nav-admin">⚙ Admin</a>
+    </div>
+    <button class="nav-join-btn" onclick="copyServerIP()">CONECTAR</button>
+    <button class="nav-mobile-toggle" id="mobileToggle" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<section class="page-hero">
+  <div class="container">
+    <div class="page-hero-badge">Furious Industries RP</div>
+    <h1>FACCIONES</h1>
+    <p>Elige tu bando. Únete a una facción y forja tu destino en la ciudad.</p>
+  </div>
+</section>
+
+<section style="background:var(--bg);padding:80px 0 100px;">
+  <div class="container">
+    <div class="factions-filter" id="factionsFilter">
+      <button class="filter-btn active" data-filter="all">Todas</button>
+      <button class="filter-btn" data-filter="police">Policía</button>
+      <button class="filter-btn" data-filter="emergency">Emergencias</button>
+      <button class="filter-btn" data-filter="criminal">Criminal</button>
+      <button class="filter-btn" data-filter="civilian">Civil</button>
+    </div>
+    <div class="factions-grid" id="factionsGrid">
+      <div style="grid-column:1/-1;text-align:center;padding:80px;color:var(--muted);">Cargando facciones...</div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <span class="logo-icon">⚡</span>
+          <span>FURIOUS <span class="logo-accent">INDUSTRIES</span></span>
+        </div>
+        <p>El servidor de roleplay más intenso e inmersivo. Construye tu historia en un mundo sin límites donde cada decisión importa.</p>
+        <div class="footer-social">
+          <a href="#" class="social-link" id="discordFooterLink">Discord</a>
+          <a href="#" class="social-link">YouTube</a>
+          <a href="#" class="social-link">Instagram</a>
+        </div>
+      </div>
+      <div class="footer-links">
+        <h4>Servidor</h4>
+        <ul>
+          <li><a href="/equipo">Equipo</a></li>
+          <li><a href="/facciones">Facciones</a></li>
+          <li><a href="/noticias">Noticias</a></li>
+          <li><a href="/reglas">Reglas</a></li>
+          <li><a href="/foro">Foro</a></li>
+          <li><a href="/tienda">Tienda</a></li>
+        </ul>
+      </div>
+      <div class="footer-links">
+        <h4>Acceso</h4>
+        <ul>
+          <li><a href="#" onclick="copyServerIP();return false;">Conectar al Servidor</a></li>
+          <li><a href="/admin/login">Panel Admin</a></li>
+          <li><a href="#" id="discordFooterLink2">Discord</a></li>
+        </ul>
+      </div>
+      <div class="footer-server">
+        <h4>Estado del Servidor</h4>
+        <div class="server-status">
+          <div class="status-indicator active"></div>
+          <span>Servidor Online</span>
+        </div>
+        <div class="server-info">IP: <code id="serverIPDisplay">Cargando...</code></div>
+        <button class="footer-connect-btn" onclick="copyServerIP()">COPIAR IP</button>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2024 Furious Industries RP. Todos los derechos reservados.</p>
+      <p>No afiliado con Rockstar Games ni Take-Two Interactive.</p>
+    </div>
+  </div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  let serverIP = 'play.furiousin.com:30120';
+  let allFactions = [];
+  let currentFilter = 'all';
+
+  function esc(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+  function copyServerIP() {
+    navigator.clipboard.writeText(serverIP).then(() => showToast('✓ IP copiada: ' + serverIP)).catch(() => showToast('IP: ' + serverIP));
+  }
+
+  async function loadStats() {
+    try {
+      const { data } = await fetch('/api/stats').then(r => r.json());
+      serverIP = data.server_ip + ':' + data.server_port;
+      const ip = document.getElementById('serverIPDisplay');
+      if (ip) ip.textContent = serverIP;
+      ['navDiscord','discordFooterLink','discordFooterLink2'].forEach(id => {
+        const a = document.getElementById(id);
+        if (a) a.href = data.discord_url || '#';
+      });
+    } catch (_) {}
+  }
+
+  async function loadFactions() {
+    try {
+      const { data } = await fetch('/api/factions').then(r => r.json());
+      allFactions = data;
+      renderFactions();
+    } catch (_) {
+      document.getElementById('factionsGrid').innerHTML = '<p style="grid-column:1/-1;text-align:center;color:var(--muted);padding:60px;">Error al cargar facciones.</p>';
+    }
+  }
+
+  function renderFactions() {
+    const filtered = currentFilter === 'all' ? allFactions : allFactions.filter(f => f.type === currentFilter);
+    const grid = document.getElementById('factionsGrid');
+    if (!filtered.length) {
+      grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:var(--muted);padding:60px;">No hay facciones en esta categoría.</p>';
+      return;
+    }
+    const typeLabels = { police:'Policía', emergency:'Emergencias', criminal:'Criminal', civilian:'Civil' };
+    grid.innerHTML = filtered.map(f => `
+      <div class="faction-card fade-in" style="--faction-color:${f.color};" data-type="${f.type}">
+        <div style="position:absolute;bottom:0;left:0;right:0;height:3px;background:${f.color};"></div>
+        <div class="faction-header">
+          <div class="faction-name-block">
+            <span class="faction-short" style="color:${f.color}">${esc(f.short_name || '')}</span>
+            <span class="faction-name">${esc(f.name)}</span>
+          </div>
+          <span class="faction-badge" style="color:${f.color};border:1px solid ${f.color}33">${typeLabels[f.type] || f.type}</span>
+        </div>
+        <p class="faction-desc">${f.description || ''}</p>
+        <div class="faction-meta">
+          <div class="faction-meta-item">
+            <span class="faction-meta-label">Líder</span>
+            <span class="faction-meta-value">${esc(f.leader || 'Sin líder')}</span>
+          </div>
+          <div class="faction-meta-item">
+            <span class="faction-meta-label">Miembros</span>
+            <span class="faction-meta-value">${f.member_count || 0}</span>
+          </div>
+          ${f.is_recruiting ? '<div class="faction-meta-item"><span class="faction-recruiting">✓ Reclutando</span></div>' : ''}
+        </div>
+      </div>
+    `).join('');
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.05 });
+    grid.querySelectorAll('.fade-in').forEach(el => obs.observe(el));
+  }
+
+  document.querySelectorAll('#factionsFilter .filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#factionsFilter .filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentFilter = btn.dataset.filter;
+      renderFactions();
+    });
+  });
+
+  window.addEventListener('scroll', () => {
+    document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
+  }, { passive: true });
+  document.getElementById('mobileToggle').addEventListener('click', () => {
+    document.getElementById('navLinks').classList.toggle('open');
+  });
+
+  loadStats();
+  loadFactions();
+</script>
+<script src="/js/user-nav.js"></script>
+</body>
+</html>

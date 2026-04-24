@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Foro — Furious Industries RP</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .forum-hero { background: linear-gradient(135deg, rgba(6,6,10,0.82) 0%, rgba(0,6,15,0.82) 100%); padding: 100px 20px 60px; text-align: center; position: relative; overflow: hidden; border-bottom: 1px solid #1e1e30; }
+    .forum-hero::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 0%, rgba(59,130,246,0.1) 0%, transparent 70%); pointer-events: none; }
+    .forum-hero-badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 16px; border: 1px solid rgba(59,130,246,0.3); border-radius: 20px; background: rgba(59,130,246,0.08); font-size: 0.75rem; letter-spacing: 0.15em; color: #3b82f6; text-transform: uppercase; margin-bottom: 20px; }
+    .forum-hero h1 { font-family: 'Orbitron', sans-serif; font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 700; color: #fff; margin-bottom: 16px; }
+    .forum-hero p { font-size: 1.05rem; color: #8888aa; max-width: 540px; margin: 0 auto; line-height: 1.7; }
+
+    .forum-wrap { max-width: 1100px; margin: 0 auto; padding: 50px 20px; display: grid; grid-template-columns: 1fr 340px; gap: 30px; }
+    @media(max-width:768px) { .forum-wrap { grid-template-columns: 1fr; } }
+
+    /* New post form */
+    .new-post-card { background: #0f0f1a; border: 1px solid #1e1e30; border-radius: 10px; padding: 24px; position: sticky; top: 80px; }
+    .new-post-title { font-family: 'Orbitron', sans-serif; font-size: 0.85rem; font-weight: 700; color: #fff; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+    .fform-group { margin-bottom: 14px; }
+    .fform-group label { display: block; font-size: 0.72rem; font-weight: 600; color: #8888aa; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 5px; }
+    .fform-group input, .fform-group textarea, .fform-group select {
+      width: 100%; padding: 9px 12px; background: #13131f; border: 1px solid #252535;
+      border-radius: 4px; color: #fff; font-size: 0.875rem; font-family: inherit; transition: border-color 0.2s; resize: vertical;
+    }
+    .fform-group input:focus, .fform-group textarea:focus, .fform-group select:focus { outline: none; border-color: #3b82f6; }
+    .fform-group select option { background: #13131f; }
+    .file-label { display: flex; align-items: center; gap: 8px; padding: 9px 12px; background: #13131f; border: 1px dashed #252535; border-radius: 4px; cursor: pointer; color: #8888aa; font-size: 0.8rem; transition: all 0.2s; }
+    .file-label:hover { border-color: #3b82f6; color: #fff; }
+    .file-label input { display: none; }
+    #filePreview { margin-top: 8px; border-radius: 6px; max-width: 100%; max-height: 180px; object-fit: cover; display: none; }
+    .submit-btn { width: 100%; padding: 12px; background: #3b82f6; color: #fff; font-family: 'Orbitron', sans-serif; font-size: 0.8rem; font-weight: 700; letter-spacing: .06em; border: none; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+    .submit-btn:hover { background: #2563eb; box-shadow: 0 0 20px rgba(59,130,246,0.35); }
+    .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Filter bar */
+    .forum-controls { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+    .forum-filter-btn { padding: 7px 16px; border: 1px solid #1e1e30; border-radius: 20px; background: transparent; color: #8888aa; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; }
+    .forum-filter-btn:hover, .forum-filter-btn.active { border-color: #3b82f6; color: #3b82f6; background: rgba(59,130,246,0.08); }
+    .forum-count { margin-left: auto; font-size: 0.8rem; color: #5a5a72; }
+
+    /* Post cards */
+    .posts-list { display: flex; flex-direction: column; gap: 16px; }
+    .post-card { background: #0f0f1a; border: 1px solid #1e1e30; border-radius: 10px; overflow: hidden; transition: border-color 0.2s; }
+    .post-card:hover { border-color: rgba(59,130,246,0.3); }
+    .post-card-img { width: 100%; max-height: 380px; object-fit: cover; display: block; cursor: pointer; transition: opacity 0.2s; }
+    .post-card-img:hover { opacity: 0.9; }
+    .post-card-body { padding: 18px 20px; }
+    .post-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .post-avatar { width: 36px; height: 36px; border-radius: 50%; background: #1e1e30; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; }
+    .post-author { font-size: 0.875rem; font-weight: 600; color: #fff; }
+    .post-date { font-size: 0.72rem; color: #5a5a72; margin-top: 1px; }
+    .post-category-badge { margin-left: auto; padding: 3px 10px; border-radius: 12px; font-size: 0.7rem; font-weight: 600; }
+    .cat-general { background: rgba(90,90,114,0.2); color: #8888aa; }
+    .cat-discusion { background: rgba(59,130,246,0.12); color: #3b82f6; }
+    .cat-media { background: rgba(34,197,94,0.12); color: #22c55e; }
+    .cat-reporte { background: rgba(239,68,68,0.12); color: #ef4444; }
+    .post-title { font-size: 1rem; font-weight: 600; color: #fff; margin-bottom: 8px; }
+    .post-content { font-size: 0.875rem; color: #8888aa; line-height: 1.6; max-height: 80px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+    .post-actions { display: flex; align-items: center; gap: 16px; margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(30,30,48,0.6); }
+    .like-btn { display: flex; align-items: center; gap: 6px; padding: 5px 12px; border: 1px solid #1e1e30; border-radius: 20px; background: transparent; color: #8888aa; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; }
+    .like-btn:hover, .like-btn.liked { border-color: #ef4444; color: #ef4444; background: rgba(239,68,68,0.08); }
+
+    /* Lightbox */
+    .lightbox { position: fixed; inset: 0; z-index: 9000; background: rgba(0,0,0,0.92); display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
+    .lightbox.active { opacity: 1; pointer-events: all; }
+    .lightbox img { max-width: 100%; max-height: 90vh; border-radius: 8px; object-fit: contain; }
+    .lightbox-close { position: absolute; top: 20px; right: 24px; font-size: 2rem; color: #fff; cursor: pointer; background: none; border: none; line-height: 1; }
+
+    .empty-forum { text-align: center; padding: 80px 20px; color: #5a5a72; }
+    .empty-forum span { font-size: 3.5rem; display: block; margin-bottom: 16px; }
+
+    .loading-pulse { animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:1} }
+  </style>
+</head>
+<body>
+
+<nav class="navbar" id="navbar">
+  <div class="nav-container">
+    <div class="nav-logo">
+      <a href="/" class="nav-logo-link">
+        <img src="/img/logo.png" class="nav-logo-img" alt="Furious Industries" onerror="this.outerHTML='<span class=\'logo-icon\'>⚡</span><span>FURIOUS <span class=\'logo-accent\'>INDUSTRIES</span></span>'">
+      </a>
+    </div>
+    <div class="nav-links" id="navLinks">
+      <a href="/">Inicio</a>
+      <a href="/equipo">Equipo</a>
+      <a href="/facciones">Facciones</a>
+      <a href="/noticias">Noticias</a>
+      <a href="/reglas">Reglas</a>
+      <a href="/foro" style="color:var(--primary)">Foro</a>
+      <a href="/tienda">Tienda</a>
+      <a href="#" id="navDiscord" target="_blank" rel="noopener" style="color:#5865f2">Discord</a>
+      <a href="/registro">Registro</a>
+      <a href="/admin/login" class="nav-admin">⚙ Admin</a>
+    </div>
+    <button class="nav-mobile-toggle" id="mobileToggle" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="forum-hero">
+  <div class="forum-hero-badge">💬 Comunidad</div>
+  <h1>FORO DE LA COMUNIDAD</h1>
+  <p>Comparte momentos, discute estrategias, sube tus mejores fotos del roleplay y conecta con la comunidad.</p>
+</section>
+
+<div class="forum-wrap">
+  <!-- Posts column -->
+  <div>
+    <div class="forum-controls">
+      <button class="forum-filter-btn active" data-cat="all">Todos</button>
+      <button class="forum-filter-btn" data-cat="general">General</button>
+      <button class="forum-filter-btn" data-cat="discusion">Discusión</button>
+      <button class="forum-filter-btn" data-cat="media">Media / Fotos</button>
+      <button class="forum-filter-btn" data-cat="reporte">Reportes</button>
+      <span class="forum-count" id="postCount"></span>
+    </div>
+    <div class="posts-list" id="postsList">
+      <div class="empty-forum loading-pulse"><span>💬</span>Cargando posts...</div>
+    </div>
+  </div>
+
+  <!-- New post sidebar -->
+  <div>
+    <div class="new-post-card">
+      <div class="new-post-title">✏️ NUEVO POST</div>
+      <form id="newPostForm" enctype="multipart/form-data">
+        <div class="fform-group">
+          <label>Tu nombre *</label>
+          <input type="text" id="pf-author" placeholder="¿Cómo te llaman en el servidor?" maxlength="50" required />
+        </div>
+        <div class="fform-group">
+          <label>Título *</label>
+          <input type="text" id="pf-title" placeholder="¿De qué trata tu post?" maxlength="100" required />
+        </div>
+        <div class="fform-group">
+          <label>Categoría</label>
+          <select id="pf-category">
+            <option value="general">General</option>
+            <option value="discusion">Discusión</option>
+            <option value="media">Media / Fotos</option>
+            <option value="reporte">Reporte</option>
+          </select>
+        </div>
+        <div class="fform-group">
+          <label>Contenido</label>
+          <textarea id="pf-content" rows="4" placeholder="Escribe tu mensaje aquí..." maxlength="2000"></textarea>
+        </div>
+        <div class="fform-group">
+          <label>Imagen (opcional)</label>
+          <label class="file-label" id="fileLabel">
+            📷 Seleccionar imagen
+            <input type="file" id="pf-image" accept="image/*" onchange="previewFile(this)" />
+          </label>
+          <img id="filePreview" src="" alt="Preview" />
+        </div>
+        <button type="submit" class="submit-btn" id="submitBtn">PUBLICAR</button>
+      </form>
+      <div id="postSuccess" style="display:none;text-align:center;padding:20px;color:#22c55e;font-size:0.875rem;">
+        ✅ ¡Post publicado exitosamente!<br><br>
+        <button onclick="resetForm()" style="padding:8px 18px;background:transparent;border:1px solid #22c55e;color:#22c55e;border-radius:4px;cursor:pointer;font-size:0.8rem;">Escribir otro</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+  <img id="lightboxImg" src="" alt="" />
+</div>
+
+<footer style="background:#06060a;border-top:1px solid #1e1e30;padding:30px 20px;text-align:center;margin-top:40px;">
+  <div style="font-family:'Orbitron',sans-serif;font-size:0.85rem;color:#fff;margin-bottom:8px;">FURIOUS <span style="color:#ff4500">INDUSTRIES</span> RP</div>
+  <div style="font-size:0.8rem;color:#5a5a72;">© 2024 Furious Industries RP. Todos los derechos reservados.</div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  let allPosts = [];
+  let currentCat = 'all';
+  const likedPosts = new Set(JSON.parse(localStorage.getItem('liked_posts') || '[]'));
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadDiscord();
+    loadPosts();
+
+    const nav = document.getElementById('navbar');
+    window.addEventListener('scroll', () => nav.classList.toggle('scrolled', window.scrollY > 50), { passive: true });
+    document.getElementById('mobileToggle').addEventListener('click', () => {
+      document.getElementById('navLinks').classList.toggle('open');
+    });
+
+    document.querySelectorAll('.forum-filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.forum-filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentCat = btn.dataset.cat;
+        renderPosts();
+      });
+    });
+
+    document.getElementById('newPostForm').addEventListener('submit', submitPost);
+  });
+
+  async function loadDiscord() {
+    try {
+      const r = await fetch('/api/stats');
+      const { data } = await r.json();
+      const d = document.getElementById('navDiscord');
+      if (d && data.discord_url) d.href = data.discord_url;
+    } catch (_) {}
+  }
+
+  async function loadPosts() {
+    try {
+      const r = await fetch('/api/forum/posts?limit=50');
+      const { data } = await r.json();
+      allPosts = data || [];
+      renderPosts();
+    } catch (e) {
+      document.getElementById('postsList').innerHTML = '<div class="empty-forum"><span>⚠️</span>Error al cargar posts.</div>';
+    }
+  }
+
+  function renderPosts() {
+    const filtered = currentCat === 'all' ? allPosts : allPosts.filter(p => p.category === currentCat);
+    const countEl = document.getElementById('postCount');
+    if (countEl) countEl.textContent = `${filtered.length} post${filtered.length !== 1 ? 's' : ''}`;
+
+    const list = document.getElementById('postsList');
+    if (!filtered.length) {
+      list.innerHTML = '<div class="empty-forum"><span>💬</span>No hay posts en esta categoría.<br><small style="font-size:.8rem;margin-top:8px;display:block;">¡Sé el primero en publicar!</small></div>';
+      return;
+    }
+
+    const catLabels = { general:'General', discusion:'Discusión', media:'Media', reporte:'Reporte' };
+    list.innerHTML = filtered.map(p => {
+      const liked = likedPosts.has(p.id);
+      return `
+        <div class="post-card" id="post-${p.id}">
+          ${p.image_url ? `<img class="post-card-img" src="${esc(p.image_url)}" alt="${esc(p.title)}" loading="lazy" onclick="openLightbox('${esc(p.image_url)}')" />` : ''}
+          <div class="post-card-body">
+            <div class="post-card-header">
+              <div class="post-avatar">👤</div>
+              <div>
+                <div class="post-author">${esc(p.author_name)}</div>
+                <div class="post-date">${formatDate(p.created_at)}</div>
+              </div>
+              <span class="post-category-badge cat-${esc(p.category)}">${catLabels[p.category] || esc(p.category)}</span>
+            </div>
+            <div class="post-title">${esc(p.title)}</div>
+            ${p.content ? `<div class="post-content">${esc(p.content)}</div>` : ''}
+            <div class="post-actions">
+              <button class="like-btn ${liked ? 'liked' : ''}" onclick="likePost(${p.id}, this)">
+                ❤️ <span class="like-count">${p.likes || 0}</span>
+              </button>
+              <span style="font-size:0.75rem;color:#5a5a72;">${formatDate(p.created_at)}</span>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  async function submitPost(e) {
+    e.preventDefault();
+    const author = document.getElementById('pf-author').value.trim();
+    const title = document.getElementById('pf-title').value.trim();
+    if (!author || !title) { showToast('Nombre y título son obligatorios'); return; }
+
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true; btn.textContent = 'PUBLICANDO...';
+
+    try {
+      const fd = new FormData();
+      fd.append('author_name', author);
+      fd.append('title', title);
+      fd.append('content', document.getElementById('pf-content').value);
+      fd.append('category', document.getElementById('pf-category').value);
+      const img = document.getElementById('pf-image');
+      if (img.files[0]) fd.append('image', img.files[0]);
+
+      const r = await fetch('/api/forum/posts', { method: 'POST', body: fd });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || 'Error al publicar');
+
+      document.getElementById('newPostForm').style.display = 'none';
+      document.getElementById('postSuccess').style.display = 'block';
+      await loadPosts();
+    } catch (err) {
+      showToast(err.message, true);
+      btn.disabled = false; btn.textContent = 'PUBLICAR';
+    }
+  }
+
+  async function likePost(id, btn) {
+    if (likedPosts.has(id)) return;
+    try {
+      await fetch(`/api/forum/posts/${id}/like`, { method: 'POST' });
+      likedPosts.add(id);
+      localStorage.setItem('liked_posts', JSON.stringify([...likedPosts]));
+      btn.classList.add('liked');
+      const countEl = btn.querySelector('.like-count');
+      if (countEl) countEl.textContent = parseInt(countEl.textContent) + 1;
+    } catch (_) {}
+  }
+
+  function previewFile(input) {
+    const preview = document.getElementById('filePreview');
+    const label = document.getElementById('fileLabel');
+    if (input.files && input.files[0]) {
+      const reader = new FileReader();
+      reader.onload = e => { preview.src = e.target.result; preview.style.display = 'block'; };
+      reader.readAsDataURL(input.files[0]);
+      label.innerHTML = `📷 ${input.files[0].name} <input type="file" id="pf-image" accept="image/*" onchange="previewFile(this)" />`;
+    }
+  }
+
+  function resetForm() {
+    document.getElementById('newPostForm').reset();
+    document.getElementById('newPostForm').style.display = '';
+    document.getElementById('postSuccess').style.display = 'none';
+    document.getElementById('filePreview').style.display = 'none';
+    document.getElementById('submitBtn').disabled = false;
+    document.getElementById('submitBtn').textContent = 'PUBLICAR';
+  }
+
+  function openLightbox(src) {
+    document.getElementById('lightboxImg').src = src;
+    document.getElementById('lightbox').classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeLightbox() {
+    document.getElementById('lightbox').classList.remove('active');
+    document.body.style.overflow = '';
+  }
+
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+  function esc(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function formatDate(d) {
+    if (!d) return '';
+    const date = new Date(d);
+    const now = new Date();
+    const diff = (now - date) / 1000;
+    if (diff < 60) return 'hace un momento';
+    if (diff < 3600) return `hace ${Math.floor(diff/60)}m`;
+    if (diff < 86400) return `hace ${Math.floor(diff/3600)}h`;
+    return date.toLocaleDateString('es-ES', { day:'2-digit', month:'short', year:'numeric' });
+  }
+
+  function showToast(msg, isErr) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.className = `toast show${isErr?' error':''}`;
+    setTimeout(() => t.classList.remove('show'), 3500);
+  }
+</script>
+<script src="/js/user-nav.js"></script>
+<script>
+  // Pre-fill author name from session if logged in
+  fetch('/api/me').then(r => r.ok ? r.json() : null).then(j => {
+    if (!j) return;
+    const nameInput = document.getElementById('pf-author');
+    if (nameInput && !nameInput.value) nameInput.value = j.data.full_name;
+    const avatarUrl = j.data.avatar_url;
+    if (avatarUrl) { window._userAvatar = avatarUrl; window._userName = j.data.full_name; }
+  }).catch(() => {});
+</script>
+</body>
+</html>

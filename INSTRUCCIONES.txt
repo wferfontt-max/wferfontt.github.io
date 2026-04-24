@@ -1,0 +1,75 @@
+============================================================
+  FURIOUS INDUSTRIES RP — INSTRUCCIONES DE INSTALACIÓN
+============================================================
+
+PASO 1: Instalar Node.js
+------------------------
+Descarga e instala Node.js desde: https://nodejs.org
+Recomendado: versión LTS (Long Term Support)
+
+Después de instalar, reinicia la terminal/PowerShell.
+
+PASO 2: Instalar dependencias
+-----------------------------
+Abre PowerShell o CMD en esta carpeta y ejecuta:
+
+    npm install
+
+PASO 3: Iniciar el servidor
+---------------------------
+    npm start
+
+  o para desarrollo con recarga automática:
+
+    npm run dev
+
+PASO 4: Abrir en el navegador
+------------------------------
+  Sitio principal:  http://localhost:3000
+  Panel de admin:   http://localhost:3000/admin/login
+
+============================================================
+  CREDENCIALES POR DEFECTO DEL ADMIN
+============================================================
+  Usuario:    admin
+  Contraseña: admin123
+
+  ⚠ CAMBIA LA CONTRASEÑA DESDE EL PANEL DE CONFIGURACIÓN
+
+============================================================
+  ESTRUCTURA DEL PROYECTO
+============================================================
+  server.js           — Servidor Express principal
+  database.js         — Base de datos SQLite
+  routes/
+    api.js            — API pública (noticias, facciones, reglas)
+    auth.js           — Login / Logout
+    admin.js          — API del panel de administración
+  middleware/
+    auth.js           — Protección de rutas de admin
+  public/
+    index.html        — Página principal del servidor
+    css/style.css     — Estilos de la página pública
+    js/main.js        — JavaScript de la página pública
+    admin/
+      login.html      — Login del panel admin
+      dashboard.html  — Panel de administración
+      js/admin.js     — JavaScript del panel admin
+
+  furious.db          — Base de datos (se crea automáticamente)
+
+============================================================
+  BASE DE DATOS SQL (SQLite)
+============================================================
+  Tablas creadas automáticamente:
+  - admins           (usuarios administradores)
+  - news             (noticias y anuncios)
+  - players          (jugadores registrados)
+  - characters       (personajes de RP)
+  - factions         (facciones del servidor)
+  - rules            (reglamento)
+  - server_settings  (configuración del servidor)
+  - activity_log     (registro de actividad del admin)
+
+  El archivo de la base de datos se guarda en: furious.db
+  Puedes abrirlo con DB Browser for SQLite (gratuito).

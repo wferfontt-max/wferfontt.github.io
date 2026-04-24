@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Equipo — Furious Industries RP</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<nav class="navbar" id="navbar">
+  <div class="nav-container">
+    <div class="nav-logo">
+      <a href="/" class="nav-logo-link">
+        <img src="/img/logo.png" class="nav-logo-img" alt="Furious Industries" onerror="this.outerHTML='<span class=\'logo-icon\'>⚡</span><span>FURIOUS <span class=\'logo-accent\'>INDUSTRIES</span></span>'">
+      </a>
+    </div>
+    <div class="nav-links" id="navLinks">
+      <a href="/">Inicio</a>
+      <a href="/equipo" style="color:var(--primary)">Equipo</a>
+      <a href="/facciones">Facciones</a>
+      <a href="/noticias">Noticias</a>
+      <a href="/reglas">Reglas</a>
+      <a href="/foro">Foro</a>
+      <a href="/tienda">Tienda</a>
+      <a href="#" id="navDiscord" target="_blank" rel="noopener" style="color:#5865f2">Discord</a>
+      <a href="/registro">Registro</a>
+      <a href="/admin/login" class="nav-admin">⚙ Admin</a>
+    </div>
+    <button class="nav-join-btn" onclick="copyServerIP()">CONECTAR</button>
+    <button class="nav-mobile-toggle" id="mobileToggle" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<section class="page-hero">
+  <div class="container">
+    <div class="page-hero-badge">Furious Industries RP</div>
+    <h1>NUESTRO EQUIPO</h1>
+    <p>Las personas que trabajan cada día para ofrecerte la mejor experiencia de roleplay.</p>
+  </div>
+</section>
+
+<section class="team-section" style="padding:80px 0 100px;">
+  <div class="container">
+    <div class="team-grid" id="teamGrid">
+      <div style="grid-column:1/-1;text-align:center;padding:80px;color:var(--muted);">Cargando equipo...</div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <span class="logo-icon">⚡</span>
+          <span>FURIOUS <span class="logo-accent">INDUSTRIES</span></span>
+        </div>
+        <p>El servidor de roleplay más intenso e inmersivo. Construye tu historia en un mundo sin límites donde cada decisión importa.</p>
+        <div class="footer-social">
+          <a href="#" class="social-link" id="discordFooterLink">Discord</a>
+          <a href="#" class="social-link">YouTube</a>
+          <a href="#" class="social-link">Instagram</a>
+        </div>
+      </div>
+      <div class="footer-links">
+        <h4>Servidor</h4>
+        <ul>
+          <li><a href="/equipo">Equipo</a></li>
+          <li><a href="/facciones">Facciones</a></li>
+          <li><a href="/noticias">Noticias</a></li>
+          <li><a href="/reglas">Reglas</a></li>
+          <li><a href="/foro">Foro</a></li>
+          <li><a href="/tienda">Tienda</a></li>
+        </ul>
+      </div>
+      <div class="footer-links">
+        <h4>Acceso</h4>
+        <ul>
+          <li><a href="#" onclick="copyServerIP();return false;">Conectar al Servidor</a></li>
+          <li><a href="/admin/login">Panel Admin</a></li>
+          <li><a href="#" id="discordFooterLink2">Discord</a></li>
+        </ul>
+      </div>
+      <div class="footer-server">
+        <h4>Estado del Servidor</h4>
+        <div class="server-status">
+          <div class="status-indicator active"></div>
+          <span>Servidor Online</span>
+        </div>
+        <div class="server-info">IP: <code id="serverIPDisplay">Cargando...</code></div>
+        <button class="footer-connect-btn" onclick="copyServerIP()">COPIAR IP</button>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2024 Furious Industries RP. Todos los derechos reservados.</p>
+      <p>No afiliado con Rockstar Games ni Take-Two Interactive.</p>
+    </div>
+  </div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  let serverIP = 'play.furiousin.com:30120';
+
+  function esc(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+  function copyServerIP() {
+    navigator.clipboard.writeText(serverIP).then(() => showToast('✓ IP copiada: ' + serverIP)).catch(() => showToast('IP: ' + serverIP));
+  }
+
+  async function loadStats() {
+    try {
+      const { data } = await fetch('/api/stats').then(r => r.json());
+      serverIP = data.server_ip + ':' + data.server_port;
+      const ip = document.getElementById('serverIPDisplay');
+      if (ip) ip.textContent = serverIP;
+      ['navDiscord','discordFooterLink','discordFooterLink2'].forEach(id => {
+        const a = document.getElementById(id);
+        if (a) a.href = data.discord_url || '#';
+      });
+    } catch (_) {}
+  }
+
+  async function loadTeam() {
+    try {
+      const { data } = await fetch('/api/team').then(r => r.json());
+      renderTeam(data);
+    } catch (_) {
+      document.getElementById('teamGrid').innerHTML = '<p style="grid-column:1/-1;text-align:center;color:var(--muted);padding:60px;">Error al cargar el equipo.</p>';
+    }
+  }
+
+  function renderTeam(members) {
+    const grid = document.getElementById('teamGrid');
+    if (!members.length) {
+      grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:var(--muted);padding:60px;">Sin miembros aún.</p>';
+      return;
+    }
+    const roleTitles = { founder:'Fundador', cofounder:'Co-Fundador', developer:'Desarrollador', staff:'Staff', moderator:'Moderador', admin:'Administrador' };
+
+    function avatarHTML(m) {
+      const initials = m.name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+      const inner = m.photo_url
+        ? `<img src="${esc(m.photo_url)}" alt="${esc(m.name)}" onerror="this.parentElement.innerHTML='<div class=\\'team-avatar-initials avatar-${m.role}\\'>${initials}</div>'">`
+        : `<div class="team-avatar-initials avatar-${m.role}">${initials}</div>`;
+      return `<div class="team-avatar">${inner}<div class="team-avatar-ring ring-${m.role}"></div></div>`;
+    }
+
+    function metaHTML(m) {
+      let html = '';
+      if (m.joined_date) html += `<div class="team-meta-item">📅 Desde <span>${esc(m.joined_date)}</span></div>`;
+      if (m.discord)     html += `<div class="team-meta-item">💬 <span>${esc(m.discord)}</span></div>`;
+      return html ? `<div class="team-meta">${html}</div>` : '';
+    }
+
+    const founder = members.find(m => m.role === 'founder');
+    const rest    = members.filter(m => m.role !== 'founder');
+    let html = '';
+
+    if (founder) {
+      html += `
+        <div class="team-card-founder fade-in" data-role="founder">
+          <span class="team-crown">👑</span>
+          ${avatarHTML(founder)}
+          <div class="team-card-body">
+            <span class="team-role-badge badge-role-founder">${esc(founder.title)}</span>
+            <div class="team-name">${esc(founder.name)}</div>
+            <div class="team-title">${roleTitles[founder.role] || founder.role}</div>
+            <p class="team-bio">${founder.bio || ''}</p>
+            ${metaHTML(founder)}
+          </div>
+        </div>`;
+    }
+
+    rest.forEach(m => {
+      html += `
+        <div class="team-card fade-in" data-role="${m.role}">
+          ${avatarHTML(m)}
+          <div class="team-card-body">
+            <span class="team-role-badge badge-role-${m.role}">${esc(m.title)}</span>
+            <div class="team-name">${esc(m.name)}</div>
+            <div class="team-title">${roleTitles[m.role] || m.role}</div>
+            <p class="team-bio">${m.bio || ''}</p>
+            ${metaHTML(m)}
+          </div>
+        </div>`;
+    });
+
+    grid.innerHTML = html;
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.1 });
+    grid.querySelectorAll('.fade-in').forEach(el => obs.observe(el));
+  }
+
+  window.addEventListener('scroll', () => {
+    document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
+  }, { passive: true });
+  document.getElementById('mobileToggle').addEventListener('click', () => {
+    document.getElementById('navLinks').classList.toggle('open');
+  });
+
+  loadStats();
+  loadTeam();
+</script>
+<script src="/js/user-nav.js"></script>
+</body>
+</html>

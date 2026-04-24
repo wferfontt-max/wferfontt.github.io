@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Furious Industries RP | El Roleplay Más Intenso</title>
+  <meta name="description" content="Furious Industries RP - La experiencia de roleplay más inmersiva e intensa. FiveM GTA V roleplay server.">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<!-- ── Navbar ─────────────────────────────────────────────── -->
+<nav class="navbar" id="navbar">
+  <div class="nav-container">
+    <div class="nav-logo">
+      <a href="/" class="nav-logo-link">
+        <img src="/img/logo.png" class="nav-logo-img" alt="Furious Industries" onerror="this.outerHTML='<span class=\'logo-icon\'>⚡</span><span>FURIOUS <span class=\'logo-accent\'>INDUSTRIES</span></span>'">
+      </a>
+    </div>
+    <div class="nav-links" id="navLinks">
+      <a href="/">Inicio</a>
+      <a href="/equipo">Equipo</a>
+      <a href="/facciones">Facciones</a>
+      <a href="/noticias">Noticias</a>
+      <a href="/reglas">Reglas</a>
+      <a href="/foro">Foro</a>
+      <a href="/tienda">Tienda</a>
+      <a href="#" id="navDiscord" target="_blank" rel="noopener" style="color:#5865f2">Discord</a>
+      <a href="/registro">Registro</a>
+      <a href="/admin/login" class="nav-admin">⚙ Admin</a>
+    </div>
+    <button class="nav-join-btn" onclick="copyServerIP()">CONECTAR</button>
+    <button class="nav-mobile-toggle" id="mobileToggle" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- ── Hero ───────────────────────────────────────────────── -->
+<section class="hero" id="inicio">
+  <div class="hero-content">
+    <div class="hero-badge">
+      <span class="hero-badge-dot"></span>
+      SERVIDOR ACTIVO — FiveM
+    </div>
+    <div class="hero-logo-container">
+      <img
+        src="/img/logo.png"
+        alt="Furious Roleplay"
+        class="hero-logo-img"
+        onerror="this.outerHTML='<h1 class=\'hero-title\'><span class=\'hero-title-line1\'>FURIOUS</span><span class=\'hero-title-line2\'>ROLEPLAY</span></h1>'"
+      >
+    </div>
+    <p class="hero-description">
+      La experiencia de roleplay más inmersiva e intensa. Construye tu historia, elige tu bando y domina la ciudad.
+    </p>
+    <div class="hero-buttons">
+      <button class="btn-primary" onclick="copyServerIP()">
+        <span>CONECTAR AL SERVIDOR</span>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+      <a href="/reglas" class="btn-secondary">VER REGLAS</a>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <span class="hero-stat-value" id="statOnline">--</span>
+        <span class="hero-stat-label">Online Ahora</span>
+      </div>
+      <div class="hero-stat-divider"></div>
+      <div class="hero-stat">
+        <span class="hero-stat-value" id="statTotal">--</span>
+        <span class="hero-stat-label">Registrados</span>
+      </div>
+      <div class="hero-stat-divider"></div>
+      <div class="hero-stat">
+        <span class="hero-stat-value" id="statFactions">--</span>
+        <span class="hero-stat-label">Facciones</span>
+      </div>
+      <div class="hero-stat-divider"></div>
+      <div class="hero-stat">
+        <span class="hero-stat-value" id="statChars">--</span>
+        <span class="hero-stat-label">Personajes</span>
+      </div>
+    </div>
+  </div>
+  <div class="hero-scroll-indicator">
+    <div class="scroll-mouse"><div class="scroll-wheel"></div></div>
+  </div>
+</section>
+
+<!-- ── Quick Nav Cards ────────────────────────────────────── -->
+<section style="background:var(--bg);padding:70px 0 0;">
+  <div class="container">
+    <div class="section-header fade-in">
+      <span class="section-tag">Explora el Servidor</span>
+      <h2 class="section-title">¿Qué Quieres Ver?</h2>
+      <p class="section-subtitle">Accede directamente a cualquier sección del servidor</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:0;">
+      <a href="/equipo" class="quicknav-card fade-in">
+        <span class="quicknav-icon">👥</span>
+        <span class="quicknav-label">EQUIPO</span>
+      </a>
+      <a href="/facciones" class="quicknav-card fade-in">
+        <span class="quicknav-icon">⚔️</span>
+        <span class="quicknav-label">FACCIONES</span>
+      </a>
+      <a href="/noticias" class="quicknav-card fade-in">
+        <span class="quicknav-icon">📰</span>
+        <span class="quicknav-label">NOTICIAS</span>
+      </a>
+      <a href="/reglas" class="quicknav-card fade-in">
+        <span class="quicknav-icon">📋</span>
+        <span class="quicknav-label">REGLAS</span>
+      </a>
+      <a href="/foro" class="quicknav-card fade-in">
+        <span class="quicknav-icon">💬</span>
+        <span class="quicknav-label">FORO</span>
+      </a>
+      <a href="/tienda" class="quicknav-card fade-in">
+        <span class="quicknav-icon">🛒</span>
+        <span class="quicknav-label">TIENDA</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ── Features ───────────────────────────────────────────── -->
+<section class="features">
+  <div class="container">
+    <div class="section-header fade-in">
+      <span class="section-tag">¿Por qué elegirnos?</span>
+      <h2 class="section-title">Una Experiencia Única</h2>
+      <p class="section-subtitle">Furious Industries ofrece el mejor roleplay con sistemas únicos y una comunidad increíble</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card fade-in">
+        <div class="feature-icon">🚗</div>
+        <h3>Vehículos Custom</h3>
+        <p>Más de 500 vehículos únicos con modificaciones personalizadas y sistemas de tunning avanzados exclusivos.</p>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon">💼</div>
+        <h3>Empleos Únicos</h3>
+        <p>Decenas de trabajos legales e ilegales con progresión real, jerarquías y recompensas exclusivas.</p>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon">🏠</div>
+        <h3>Sistema Inmobiliario</h3>
+        <p>Compra, vende y alquila propiedades en la ciudad. Desde apartamentos hasta mansiones y negocios.</p>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon">💰</div>
+        <h3>Economía Real</h3>
+        <p>Sistema económico balanceado con bancos, inversiones, mercado negro y sistema de impuestos.</p>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon">⚔️</div>
+        <h3>Territorios y Guerras</h3>
+        <p>Controla territorios estratégicos, establece alianzas y domina la ciudad con tu organización.</p>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon">🎭</div>
+        <h3>Eventos Especiales</h3>
+        <p>Eventos temáticos regulares con recompensas exclusivas y experiencias únicas creadas por el staff.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Donors ─────────────────────────────────────────────── -->
+<section class="donors-section" id="donadores">
+  <div class="container">
+    <div class="section-header fade-in">
+      <span class="section-tag">Apoya el Servidor</span>
+      <h2 class="section-title">Nuestros Donadores</h2>
+      <p class="section-subtitle">Estas personas hacen posible Furious Industries cada día. ¡Gracias!</p>
+    </div>
+    <div class="donors-grid" id="donorsGrid">
+      <div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--muted);">Cargando donadores...</div>
+    </div>
+    <div style="text-align:center;margin-top:48px;" class="fade-in">
+      <a href="/tienda" class="btn-primary" style="display:inline-flex;">
+        <span>VER TIENDA &amp; DONAR</span>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:18px;height:18px;"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ── Footer ─────────────────────────────────────────────── -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <span class="logo-icon">⚡</span>
+          <span>FURIOUS <span class="logo-accent">INDUSTRIES</span></span>
+        </div>
+        <p>El servidor de roleplay más intenso e inmersivo. Construye tu historia en un mundo sin límites donde cada decisión importa.</p>
+        <div class="footer-social">
+          <a href="#" class="social-link" id="discordFooterLink">Discord</a>
+          <a href="#" class="social-link">YouTube</a>
+          <a href="#" class="social-link">Instagram</a>
+        </div>
+      </div>
+      <div class="footer-links">
+        <h4>Servidor</h4>
+        <ul>
+          <li><a href="/equipo">Equipo</a></li>
+          <li><a href="/facciones">Facciones</a></li>
+          <li><a href="/noticias">Noticias</a></li>
+          <li><a href="/reglas">Reglas</a></li>
+          <li><a href="/foro">Foro</a></li>
+          <li><a href="/tienda">Tienda</a></li>
+        </ul>
+      </div>
+      <div class="footer-links">
+        <h4>Acceso</h4>
+        <ul>
+          <li><a href="#" onclick="copyServerIP();return false;">Conectar al Servidor</a></li>
+          <li><a href="/admin/login">Panel Admin</a></li>
+          <li><a href="#" id="discordFooterLink2">Discord</a></li>
+        </ul>
+      </div>
+      <div class="footer-server">
+        <h4>Estado del Servidor</h4>
+        <div class="server-status">
+          <div class="status-indicator active"></div>
+          <span>Servidor Online</span>
+        </div>
+        <div class="server-info">
+          IP: <code id="serverIPDisplay">Cargando...</code>
+        </div>
+        <button class="footer-connect-btn" onclick="copyServerIP()">COPIAR IP</button>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2024 Furious Industries RP. Todos los derechos reservados.</p>
+      <p>No afiliado con Rockstar Games ni Take-Two Interactive.</p>
+    </div>
+  </div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<style>
+  /* Quick nav cards */
+  .quicknav-card {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 10px; padding: 28px 16px;
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 10px; text-decoration: none; transition: all 0.25s;
+  }
+  .quicknav-card:hover { border-color: var(--primary); background: var(--bg-card-hover); transform: translateY(-4px); box-shadow: 0 8px 30px rgba(0,0,0,0.4), 0 0 20px var(--primary-glow-sm); }
+  .quicknav-icon { font-size: 2rem; }
+  .quicknav-label { font-family: 'Orbitron', sans-serif; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.18em; color: var(--text); transition: color 0.2s; }
+  .quicknav-card:hover .quicknav-label { color: var(--primary); }
+</style>
+
+<script src="/js/main.js"></script>
+<script src="/js/user-nav.js"></script>
+</body>
+</html>

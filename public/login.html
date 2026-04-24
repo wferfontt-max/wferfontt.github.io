@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Iniciar Sesión — Furious Industries RP</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .auth-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 100px 20px 60px; }
+    .auth-card { background: rgba(11,11,22,0.93); border: 1px solid #1e1e30; border-radius: 14px; padding: 48px 44px; width: 100%; max-width: 440px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+    .auth-logo { text-align: center; margin-bottom: 32px; }
+    .auth-logo .logo-icon { font-size: 2.2rem; }
+    .auth-logo span { font-family: 'Orbitron', sans-serif; font-size: 1.1rem; font-weight: 700; color: #fff; }
+    .auth-logo .logo-accent { color: #ff4500; }
+    .auth-title { font-family: 'Orbitron', sans-serif; font-size: 1.5rem; font-weight: 700; color: #fff; text-align: center; margin-bottom: 6px; }
+    .auth-sub { text-align: center; font-size: 0.85rem; color: #5a5a72; margin-bottom: 36px; }
+    .form-group { margin-bottom: 20px; }
+    .form-label { display: block; font-size: 0.8rem; font-weight: 600; color: #8888aa; margin-bottom: 8px; letter-spacing: .05em; text-transform: uppercase; }
+    .form-input { width: 100%; background: rgba(5,5,10,0.8); border: 1px solid #1e1e30; border-radius: 8px; padding: 12px 16px; font-size: 0.9rem; color: #fff; outline: none; transition: border-color .2s, box-shadow .2s; box-sizing: border-box; }
+    .form-input:focus { border-color: rgba(255,69,0,0.5); box-shadow: 0 0 0 3px rgba(255,69,0,0.1); }
+    .form-input::placeholder { color: #3a3a52; }
+    .submit-btn { width: 100%; padding: 14px; background: #ff4500; color: #fff; font-family: 'Orbitron', sans-serif; font-size: 0.9rem; font-weight: 700; letter-spacing: .08em; border: none; border-radius: 8px; cursor: pointer; transition: all .25s; box-shadow: 0 0 24px rgba(255,69,0,0.3); margin-top: 8px; }
+    .submit-btn:hover { background: #ff6528; box-shadow: 0 0 40px rgba(255,69,0,0.5); transform: translateY(-1px); }
+    .submit-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+    .form-alert { padding: 12px 16px; border-radius: 8px; font-size: .85rem; margin-bottom: 20px; display: none; }
+    .form-alert.error { background: rgba(220,38,38,.12); border: 1px solid rgba(220,38,38,.3); color: #f87171; }
+    .form-alert.success { background: rgba(22,163,74,.12); border: 1px solid rgba(22,163,74,.3); color: #4ade80; }
+    .auth-footer { text-align: center; margin-top: 24px; font-size: .82rem; color: #5a5a72; }
+    .auth-footer a { color: #ff4500; text-decoration: none; }
+    .auth-footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+<nav class="navbar" id="navbar">
+  <div class="nav-container">
+    <div class="nav-logo">
+      <a href="/" class="nav-logo-link">
+        <img src="/img/logo.png" class="nav-logo-img" alt="Furious Industries" onerror="this.outerHTML='<span class=\'logo-icon\'>⚡</span><span>FURIOUS <span class=\'logo-accent\'>INDUSTRIES</span></span>'">
+      </a>
+    </div>
+    <div class="nav-links" id="navLinks">
+      <a href="/">Inicio</a>
+      <a href="/equipo">Equipo</a>
+      <a href="/facciones">Facciones</a>
+      <a href="/noticias">Noticias</a>
+      <a href="/reglas">Reglas</a>
+      <a href="/foro">Foro</a>
+      <a href="/tienda">Tienda</a>
+      <a href="#" id="navDiscord" target="_blank" rel="noopener" style="color:#5865f2">Discord</a>
+      <a href="/registro">Registro</a>
+      <a href="/admin/login" class="nav-admin">⚙ Admin</a>
+    </div>
+    <button class="nav-mobile-toggle" id="mobileToggle" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <span class="logo-icon">⚡</span>
+      <span>FURIOUS <span class="logo-accent">INDUSTRIES</span></span>
+    </div>
+    <div class="auth-title">INICIAR SESIÓN</div>
+    <div class="auth-sub">Accede a tu perfil, historial de compras y más.</div>
+
+    <div class="form-alert" id="formAlert"></div>
+
+    <form id="loginForm" novalidate>
+      <div class="form-group">
+        <label class="form-label" for="email">Correo Electrónico</label>
+        <input class="form-input" type="email" id="email" name="email" placeholder="tu@correo.com" required autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="password">Clave</label>
+        <input class="form-input" type="password" id="password" name="password" placeholder="Tu contraseña" required autocomplete="current-password">
+      </div>
+      <button class="submit-btn" type="submit" id="submitBtn">ENTRAR</button>
+    </form>
+
+    <div class="auth-footer">
+      ¿No tienes cuenta? <a href="/registro">Regístrate aquí</a>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const nav = document.getElementById('navbar');
+    window.addEventListener('scroll', () => nav.classList.toggle('scrolled', window.scrollY > 50), { passive: true });
+    document.getElementById('mobileToggle').addEventListener('click', () => document.getElementById('navLinks').classList.toggle('open'));
+    fetch('/api/stats').then(r => r.json()).then(({ data }) => {
+      const d = document.getElementById('navDiscord');
+      if (d && data.discord_url) d.href = data.discord_url;
+    }).catch(() => {});
+
+    // Redirect if already logged in
+    fetch('/api/me').then(r => { if (r.ok) { const p = new URLSearchParams(location.search).get('redirect') || '/perfil'; location.href = p; } }).catch(() => {});
+
+    document.getElementById('loginForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true; btn.textContent = 'ENTRANDO...';
+      hideAlert();
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: document.getElementById('email').value.trim(), password: document.getElementById('password').value }),
+        });
+        const data = await res.json();
+        if (!res.ok) { showAlert(data.error || 'Error al iniciar sesión', 'error'); }
+        else { showAlert('¡Bienvenido, ' + data.data.full_name.split(' ')[0] + '!', 'success'); setTimeout(() => { location.href = new URLSearchParams(location.search).get('redirect') || '/perfil'; }, 800); }
+      } catch (_) { showAlert('Error de conexión', 'error'); }
+      finally { btn.disabled = false; btn.textContent = 'ENTRAR'; }
+    });
+  });
+  function showAlert(msg, type) { const el = document.getElementById('formAlert'); el.textContent = msg; el.className = 'form-alert ' + type; el.style.display = 'block'; }
+  function hideAlert() { document.getElementById('formAlert').style.display = 'none'; }
+</script>
+<script src="/js/user-nav.js"></script>
+</body>
+</html>

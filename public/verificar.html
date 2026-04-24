@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verificar Cuenta — Furious Industries RP</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .verify-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 100px 20px 60px; }
+    .verify-card { background: rgba(11,11,22,0.93); border: 1px solid #1e1e30; border-radius: 14px; padding: 52px 44px; width: 100%; max-width: 460px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+    .verify-icon { font-size: 4rem; margin-bottom: 20px; line-height: 1; }
+    .verify-title { font-family: 'Orbitron', sans-serif; font-size: 1.3rem; font-weight: 700; color: #fff; margin-bottom: 10px; }
+    .verify-sub { font-size: 0.9rem; color: #8888aa; line-height: 1.6; margin-bottom: 28px; }
+    .verify-btn { display: inline-flex; align-items: center; gap: 10px; padding: 12px 28px; background: #ff4500; color: #fff; font-family: 'Orbitron', sans-serif; font-size: 0.8rem; font-weight: 700; letter-spacing: .07em; border-radius: 7px; text-decoration: none; transition: all .2s; }
+    .verify-btn:hover { background: #ff6528; }
+    .verify-btn.secondary { background: transparent; border: 1px solid #1e1e30; color: #8888aa; }
+    .verify-btn.secondary:hover { border-color: rgba(255,69,0,.3); color: #ff4500; }
+    .btn-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+<nav class="navbar" id="navbar">
+  <div class="nav-container">
+    <div class="nav-logo">
+      <a href="/" class="nav-logo-link">
+        <img src="/img/logo.png" class="nav-logo-img" alt="Furious Industries" onerror="this.outerHTML='<span class=\'logo-icon\'>⚡</span><span>FURIOUS <span class=\'logo-accent\'>INDUSTRIES</span></span>'">
+      </a>
+    </div>
+    <div class="nav-links" id="navLinks">
+      <a href="/">Inicio</a>
+      <a href="/equipo">Equipo</a>
+      <a href="/facciones">Facciones</a>
+      <a href="/noticias">Noticias</a>
+      <a href="/reglas">Reglas</a>
+      <a href="/foro">Foro</a>
+      <a href="/tienda">Tienda</a>
+      <a href="#" id="navDiscord" target="_blank" rel="noopener" style="color:#5865f2">Discord</a>
+      <a href="/registro">Registro</a>
+      <a href="/admin/login" class="nav-admin">⚙ Admin</a>
+    </div>
+    <button class="nav-mobile-toggle" id="mobileToggle" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<div class="verify-wrap">
+  <div class="verify-card" id="verifyCard">
+    <div class="verify-icon">⏳</div>
+    <div class="verify-title">Verificando cuenta...</div>
+    <div class="verify-sub">Un momento, estamos validando tu enlace.</div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+  const nav = document.getElementById('navbar');
+  window.addEventListener('scroll', () => nav.classList.toggle('scrolled', window.scrollY > 50), { passive: true });
+  document.getElementById('mobileToggle').addEventListener('click', () => document.getElementById('navLinks').classList.toggle('open'));
+  fetch('/api/stats').then(r => r.json()).then(({ data }) => {
+    const d = document.getElementById('navDiscord'); if (d && data.discord_url) d.href = data.discord_url;
+  }).catch(() => {});
+
+  const token = new URLSearchParams(location.search).get('token');
+  const card = document.getElementById('verifyCard');
+
+  if (!token) {
+    render('error', '¿Llegaste aquí por error?', 'No se encontró ningún token de verificación.'); return;
+  }
+
+  try {
+    const r = await fetch(`/api/verify-email?token=${encodeURIComponent(token)}`);
+    const { message } = await r.json();
+    if (r.ok) render('success', '¡Cuenta Verificada!', message);
+    else      render('error',   'Enlace Inválido',      message);
+  } catch (_) {
+    render('error', 'Error de conexión', 'No pudimos conectar con el servidor. Intenta de nuevo más tarde.');
+  }
+});
+
+function render(type, title, msg) {
+  const icons = { success: '✅', error: '❌' };
+  document.getElementById('verifyCard').innerHTML = `
+    <div class="verify-icon">${icons[type] || '❓'}</div>
+    <div class="verify-title">${esc(title)}</div>
+    <div class="verify-sub">${esc(msg)}</div>
+    <div class="btn-row" style="margin-top:8px;">
+      ${type === 'success' ? '<a class="verify-btn" href="/login">Iniciar Sesión</a>' : ''}
+      <a class="verify-btn ${type === 'success' ? 'secondary' : ''}" href="/">Ir al Inicio</a>
+    </div>`;
+}
+
+function esc(s) { return s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : ''; }
+</script>
+<script src="/js/user-nav.js"></script>
+</body>
+</html>

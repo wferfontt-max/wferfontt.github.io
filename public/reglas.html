@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reglamento | Furious Industries RP</title>
+  <meta name="description" content="Reglamento oficial del servidor Furious Industries RP. Normas de convivencia y roleplay.">
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    /* ── Page header ── */
+    .rules-page-hero {
+      padding: 120px 0 60px;
+      text-align: center;
+      background: linear-gradient(180deg, rgba(11,180,232,.08) 0%, transparent 100%);
+      border-bottom: 1px solid var(--border);
+    }
+    .rules-page-hero .section-tag { display: inline-block; margin-bottom: 12px; }
+    .rules-page-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--text-bright) 0%, var(--primary) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      margin-bottom: 16px;
+    }
+    .rules-page-subtitle { color: var(--muted); font-size: 1.05rem; max-width: 580px; margin: 0 auto; }
+
+    /* ── Layout ── */
+    .rules-page-body { padding: 60px 0 100px; }
+    .rules-layout { display: grid; grid-template-columns: 240px 1fr; gap: 40px; align-items: start; }
+    @media (max-width: 860px) { .rules-layout { grid-template-columns: 1fr; } .rules-sidebar { display: none; } }
+
+    /* ── Sidebar TOC ── */
+    .rules-sidebar {
+      position: sticky; top: 88px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+      padding: 20px; max-height: calc(100vh - 120px); overflow-y: auto;
+    }
+    .rules-sidebar h4 { font-family: 'Orbitron', sans-serif; font-size: .75rem; color: var(--muted); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 14px; }
+    .toc-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 4px; }
+    .toc-list a {
+      display: block; padding: 7px 10px; border-radius: 6px; font-size: .82rem;
+      color: var(--text); transition: background .2s, color .2s; text-decoration: none;
+    }
+    .toc-list a:hover, .toc-list a.active { background: rgba(11,180,232,.12); color: var(--primary); }
+
+    /* ── Category sections ── */
+    .rule-category { margin-bottom: 48px; scroll-margin-top: 100px; }
+    .rule-category-header {
+      display: flex; align-items: center; gap: 14px; margin-bottom: 20px;
+      padding-bottom: 12px; border-bottom: 2px solid var(--border);
+    }
+    .rule-category-icon {
+      width: 38px; height: 38px; border-radius: 8px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: flex; align-items: center; justify-content: center; font-size: 1rem;
+      flex-shrink: 0;
+    }
+    .rule-category-name { font-family: 'Orbitron', sans-serif; font-size: 1rem; font-weight: 700; color: var(--text-bright); }
+    .rule-category-count { margin-left: auto; font-size: .75rem; color: var(--muted); background: var(--surface); padding: 3px 10px; border-radius: 20px; border: 1px solid var(--border); }
+
+    /* ── Rule cards ── */
+    .rule-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+      margin-bottom: 12px; overflow: hidden; transition: border-color .2s;
+    }
+    .rule-card:hover { border-color: rgba(11,180,232,.4); }
+    .rule-card-header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 16px 20px; cursor: pointer; user-select: none;
+    }
+    .rule-number {
+      font-family: 'Orbitron', sans-serif; font-size: .7rem; font-weight: 700;
+      color: var(--primary); background: rgba(11,180,232,.1); border: 1px solid rgba(11,180,232,.3);
+      padding: 3px 8px; border-radius: 4px; min-width: 36px; text-align: center; flex-shrink: 0;
+    }
+    .rule-title { font-weight: 600; color: var(--text-bright); font-size: .95rem; flex: 1; }
+    .rule-has-file { font-size: .7rem; padding: 2px 8px; border-radius: 4px; flex-shrink: 0; }
+    .rule-has-file.img-badge { background: rgba(11,180,232,.12); color: var(--primary); border: 1px solid rgba(11,180,232,.25); }
+    .rule-has-file.pdf-badge { background: rgba(220,38,38,.1); color: #ef4444; border: 1px solid rgba(220,38,38,.25); }
+    .rule-chevron { color: var(--muted); font-size: .75rem; transition: transform .25s; flex-shrink: 0; }
+    .rule-card.open .rule-chevron { transform: rotate(180deg); }
+
+    .rule-card-body { display: none; padding: 0 20px 20px; border-top: 1px solid var(--border); }
+    .rule-card.open .rule-card-body { display: block; }
+    .rule-content { color: var(--text); line-height: 1.75; font-size: .9rem; padding-top: 14px; white-space: pre-wrap; }
+
+    /* ── Attachments ── */
+    .rule-attachment { margin-top: 16px; }
+    .rule-img-preview {
+      max-width: 100%; max-height: 480px; border-radius: 8px;
+      border: 1px solid var(--border); display: block;
+    }
+    .rule-pdf-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 20px; background: rgba(220,38,38,.1); color: #ef4444;
+      border: 1px solid rgba(220,38,38,.3); border-radius: 8px;
+      font-size: .85rem; font-weight: 600; text-decoration: none;
+      transition: background .2s;
+    }
+    .rule-pdf-btn:hover { background: rgba(220,38,38,.2); }
+
+    /* ── Empty state ── */
+    .rules-empty {
+      text-align: center; padding: 80px 20px; color: var(--muted);
+    }
+    .rules-empty-icon { font-size: 3rem; margin-bottom: 16px; }
+
+    /* ── Last updated ── */
+    .rules-last-updated { text-align: center; color: var(--muted); font-size: .8rem; margin-top: 40px; }
+  </style>
+</head>
+<body>
+
+<!-- ── Navbar ── -->
+<nav class="navbar" id="navbar">
+  <div class="nav-container">
+    <div class="nav-logo">
+      <a href="/#inicio" class="nav-logo-link">
+        <img src="/img/logo.png" class="nav-logo-img" alt="Furious Industries" onerror="this.outerHTML='<span class=\'logo-icon\'>⚡</span><span>FURIOUS <span class=\'logo-accent\'>INDUSTRIES</span></span>'">
+      </a>
+    </div>
+    <div class="nav-links" id="navLinks">
+      <a href="/">Inicio</a>
+      <a href="/equipo">Equipo</a>
+      <a href="/facciones">Facciones</a>
+      <a href="/noticias">Noticias</a>
+      <a href="/reglas" style="color:var(--primary)">Reglas</a>
+      <a href="/foro">Foro</a>
+      <a href="/tienda">Tienda</a>
+      <a href="#" id="navDiscord" target="_blank" rel="noopener" style="color:#5865f2">Discord</a>
+      <a href="/registro">Registro</a>
+      <a href="/admin/login" class="nav-admin">⚙ Admin</a>
+    </div>
+    <button class="nav-join-btn" id="connectBtn" onclick="copyIP()">CONECTAR</button>
+    <button class="nav-mobile-toggle" id="mobileToggle" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- ── Hero ── -->
+<div class="rules-page-hero">
+  <div class="container">
+    <span class="section-tag">Reglamento Oficial</span>
+    <h1 class="rules-page-title">Normas del Servidor</h1>
+    <p class="rules-page-subtitle">Conoce y respeta las normas que mantienen nuestra comunidad justa y divertida para todos los jugadores.</p>
+  </div>
+</div>
+
+<!-- ── Body ── -->
+<div class="rules-page-body">
+  <div class="container">
+    <div class="rules-layout">
+
+      <!-- Sidebar TOC -->
+      <aside class="rules-sidebar">
+        <h4>Categorías</h4>
+        <ul class="toc-list" id="tocList">
+          <li><span style="color:var(--muted);font-size:.8rem">Cargando...</span></li>
+        </ul>
+      </aside>
+
+      <!-- Rules content -->
+      <main id="rulesMain">
+        <div class="rules-empty">
+          <div class="rules-empty-icon">📋</div>
+          <p>Cargando reglamento...</p>
+        </div>
+      </main>
+
+    </div>
+    <p class="rules-last-updated" id="lastUpdated"></p>
+  </div>
+</div>
+
+<!-- ── Footer ── -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <span class="logo-icon">⚡</span>
+          <span>FURIOUS <span class="logo-accent">INDUSTRIES</span></span>
+        </div>
+        <p>El servidor de roleplay más intenso e inmersivo. Construye tu historia en un mundo sin límites donde cada decisión importa.</p>
+        <div class="footer-social">
+          <a href="#" class="social-link" id="discordFooterLink">Discord</a>
+          <a href="#" class="social-link">YouTube</a>
+          <a href="#" class="social-link">Instagram</a>
+        </div>
+      </div>
+      <div class="footer-links">
+        <h4>Navegación</h4>
+        <ul>
+          <li><a href="/#inicio">Inicio</a></li>
+          <li><a href="/#facciones">Facciones</a></li>
+          <li><a href="/#noticias">Noticias</a></li>
+          <li><a href="/reglas">Reglas</a></li>
+        </ul>
+      </div>
+      <div class="footer-links">
+        <h4>Servidor</h4>
+        <ul>
+          <li><a href="#" id="connectFooterBtn">Conectar</a></li>
+          <li><a href="/admin/login">Panel Admin</a></li>
+          <li><a href="#">Whitelist</a></li>
+        </ul>
+      </div>
+      <div class="footer-server">
+        <h4>Estado del Servidor</h4>
+        <div class="server-status">
+          <div class="status-indicator active"></div>
+          <span>Servidor Online</span>
+        </div>
+        <div class="server-info">IP: <code id="serverIPDisplay">Cargando...</code></div>
+        <button class="footer-connect-btn" id="copyIPBtn">COPIAR IP</button>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2024 Furious Industries RP. Todos los derechos reservados.</p>
+      <p>No afiliado con Rockstar Games ni Take-Two Interactive.</p>
+    </div>
+  </div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  /* ── Helpers ── */
+  function esc(s) {
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.className = 'toast show success';
+    setTimeout(() => t.classList.remove('show'), 2800);
+  }
+
+  /* ── Server IP ── */
+  let serverIP = '';
+  async function loadStats() {
+    try {
+      const { data } = await fetch('/api/stats').then(r => r.json());
+      serverIP = data.server_ip + ':' + data.server_port;
+      document.getElementById('serverIPDisplay').textContent = serverIP;
+      const discordURL = data.discord_url || '#';
+      const navDc = document.getElementById('navDiscord');
+      const footDc = document.getElementById('discordFooterLink');
+      if (navDc) navDc.href = discordURL;
+      if (footDc) footDc.href = discordURL;
+    } catch(e) {}
+  }
+  function copyIP() {
+    if (!serverIP) return;
+    navigator.clipboard.writeText(serverIP).then(() => showToast('¡IP copiada al portapapeles!'));
+  }
+  document.getElementById('connectBtn').addEventListener('click', copyIP);
+  document.getElementById('copyIPBtn').addEventListener('click', copyIP);
+  document.getElementById('connectFooterBtn').addEventListener('click', (e) => { e.preventDefault(); copyIP(); });
+
+  /* ── Navbar ── */
+  window.addEventListener('scroll', () => {
+    document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
+  });
+  document.getElementById('mobileToggle').addEventListener('click', () => {
+    document.getElementById('navLinks').classList.toggle('mobile-open');
+  });
+
+  /* ── Category icons ── */
+  const catIcons = {
+    'Reglas Generales': '📜',
+    'Reglas de Combate': '⚔️',
+    'Reglas de Vehículos': '🚗',
+    'Reglas de Economía': '💰',
+    'Reglas de Facción': '🏴',
+    'Reglas de Rol': '🎭',
+  };
+  function getCatIcon(name) {
+    for (const [k, v] of Object.entries(catIcons)) if (name.includes(k.split(' ').pop())) return v;
+    return '📋';
+  }
+
+  /* ── Slugify ── */
+  function slug(s) { return s.toLowerCase().replace(/[^a-z0-9]+/g, '-'); }
+
+  /* ── Load Rules ── */
+  async function loadRules() {
+    try {
+      const { data } = await fetch('/api/rules').then(r => r.json());
+      const categories = Object.keys(data);
+
+      if (!categories.length) {
+        document.getElementById('rulesMain').innerHTML = `<div class="rules-empty"><div class="rules-empty-icon">📋</div><p>No hay reglas publicadas todavía.</p></div>`;
+        return;
+      }
+
+      /* TOC */
+      document.getElementById('tocList').innerHTML = categories.map(cat => `
+        <li><a href="#cat-${slug(cat)}">${esc(cat)}</a></li>
+      `).join('');
+
+      /* Content */
+      let ruleCounter = 0;
+      let html = '';
+      let lastUpdated = null;
+
+      for (const cat of categories) {
+        const rules = data[cat];
+        const catId = 'cat-' + slug(cat);
+        html += `
+          <section class="rule-category" id="${catId}">
+            <div class="rule-category-header">
+              <div class="rule-category-icon">${getCatIcon(cat)}</div>
+              <span class="rule-category-name">${esc(cat)}</span>
+              <span class="rule-category-count">${rules.length} regla${rules.length !== 1 ? 's' : ''}</span>
+            </div>
+        `;
+        for (const rule of rules) {
+          ruleCounter++;
+          if (rule.updated_at && (!lastUpdated || rule.updated_at > lastUpdated)) lastUpdated = rule.updated_at;
+
+          const fileBadge = rule.file_type === 'image'
+            ? `<span class="rule-has-file img-badge">📷 Imagen</span>`
+            : rule.file_type === 'pdf'
+            ? `<span class="rule-has-file pdf-badge">📄 PDF</span>`
+            : '';
+
+          let attachmentHtml = '';
+          if (rule.file_url) {
+            if (rule.file_type === 'image') {
+              attachmentHtml = `<div class="rule-attachment"><img src="${esc(rule.file_url)}" alt="${esc(rule.file_name||'Imagen')}" class="rule-img-preview" loading="lazy"></div>`;
+            } else if (rule.file_type === 'pdf') {
+              attachmentHtml = `<div class="rule-attachment"><a href="${esc(rule.file_url)}" target="_blank" rel="noopener" class="rule-pdf-btn">📄 Descargar PDF — ${esc(rule.file_name||'documento.pdf')}</a></div>`;
+            }
+          }
+
+          html += `
+            <div class="rule-card" id="rule-${rule.id}">
+              <div class="rule-card-header" onclick="toggleRule(this)">
+                <span class="rule-number">${String(ruleCounter).padStart(2,'0')}</span>
+                <span class="rule-title">${esc(rule.title)}</span>
+                ${fileBadge}
+                <span class="rule-chevron">▼</span>
+              </div>
+              <div class="rule-card-body">
+                <p class="rule-content">${esc(rule.content)}</p>
+                ${attachmentHtml}
+              </div>
+            </div>
+          `;
+        }
+        html += `</section>`;
+      }
+
+      document.getElementById('rulesMain').innerHTML = html;
+
+      if (lastUpdated) {
+        document.getElementById('lastUpdated').textContent =
+          'Última actualización: ' + new Date(lastUpdated).toLocaleDateString('es-ES', { day:'2-digit', month:'long', year:'numeric' });
+      }
+
+      /* Active TOC on scroll */
+      const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          const id = entry.target.id;
+          const link = document.querySelector(`#tocList a[href="#${id}"]`);
+          if (link) link.classList.toggle('active', entry.isIntersecting);
+        });
+      }, { rootMargin: '-20% 0px -70% 0px' });
+      document.querySelectorAll('.rule-category').forEach(el => observer.observe(el));
+
+    } catch(e) {
+      document.getElementById('rulesMain').innerHTML = `<div class="rules-empty"><div class="rules-empty-icon">⚠️</div><p>Error al cargar el reglamento. Intenta recargar la página.</p></div>`;
+    }
+  }
+
+  function toggleRule(header) {
+    header.parentElement.classList.toggle('open');
+  }
+
+  loadStats();
+  loadRules();
+</script>
+<script src="/js/user-nav.js"></script>
+</body>
+</html>

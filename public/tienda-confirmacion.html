@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Confirmación de Pago — Furious Industries RP</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .confirm-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 100px 20px 60px; }
+    .confirm-card { background: rgba(11,11,22,0.93); border: 1px solid #1e1e30; border-radius: 14px; padding: 52px 44px; width: 100%; max-width: 480px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+    .confirm-icon { font-size: 4rem; margin-bottom: 20px; line-height: 1; }
+    .confirm-title { font-family: 'Orbitron', sans-serif; font-size: 1.4rem; font-weight: 700; color: #fff; margin-bottom: 10px; }
+    .confirm-sub { font-size: 0.9rem; color: #8888aa; line-height: 1.6; margin-bottom: 28px; }
+    .confirm-detail { background: rgba(5,5,10,0.7); border: 1px solid #1e1e30; border-radius: 8px; padding: 16px 20px; margin-bottom: 28px; text-align: left; }
+    .confirm-detail-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #1e1e30; font-size: 0.85rem; }
+    .confirm-detail-row:last-child { border-bottom: none; }
+    .confirm-detail-label { color: #5a5a72; }
+    .confirm-detail-value { color: #fff; font-weight: 600; }
+    .confirm-detail-value.green { color: #4ade80; }
+    .confirm-detail-value.red { color: #f87171; }
+    .confirm-detail-value.yellow { color: #facc15; }
+    .confirm-btn { display: inline-flex; align-items: center; gap: 10px; padding: 12px 28px; background: #ff4500; color: #fff; font-family: 'Orbitron', sans-serif; font-size: 0.8rem; font-weight: 700; letter-spacing: .07em; border-radius: 7px; text-decoration: none; transition: all .2s; }
+    .confirm-btn:hover { background: #ff6528; }
+    .confirm-btn.secondary { background: transparent; border: 1px solid #1e1e30; color: #8888aa; }
+    .confirm-btn.secondary:hover { border-color: rgba(255,69,0,.3); color: #ff4500; }
+    .btn-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+<nav class="navbar" id="navbar">
+  <div class="nav-container">
+    <div class="nav-logo">
+      <a href="/" class="nav-logo-link">
+        <img src="/img/logo.png" class="nav-logo-img" alt="Furious Industries" onerror="this.outerHTML='<span class=\'logo-icon\'>⚡</span><span>FURIOUS <span class=\'logo-accent\'>INDUSTRIES</span></span>'">
+      </a>
+    </div>
+    <div class="nav-links" id="navLinks">
+      <a href="/">Inicio</a>
+      <a href="/equipo">Equipo</a>
+      <a href="/facciones">Facciones</a>
+      <a href="/noticias">Noticias</a>
+      <a href="/reglas">Reglas</a>
+      <a href="/foro">Foro</a>
+      <a href="/tienda" style="color:var(--primary)">Tienda</a>
+      <a href="#" id="navDiscord" target="_blank" rel="noopener" style="color:#5865f2">Discord</a>
+      <a href="/registro">Registro</a>
+      <a href="/admin/login" class="nav-admin">⚙ Admin</a>
+    </div>
+    <button class="nav-mobile-toggle" id="mobileToggle" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<div class="confirm-wrap">
+  <div class="confirm-card" id="confirmCard">
+    <div class="confirm-icon">⏳</div>
+    <div class="confirm-title">Verificando pago...</div>
+    <div class="confirm-sub">Estamos confirmando tu transacción con WebPay.</div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+  const nav = document.getElementById('navbar');
+  window.addEventListener('scroll', () => nav.classList.toggle('scrolled', window.scrollY > 50), { passive: true });
+  document.getElementById('mobileToggle').addEventListener('click', () => document.getElementById('navLinks').classList.toggle('open'));
+  fetch('/api/stats').then(r => r.json()).then(({ data }) => { const d = document.getElementById('navDiscord'); if (d && data.discord_url) d.href = data.discord_url; }).catch(() => {});
+
+  const params = new URLSearchParams(location.search);
+  const buyOrder = params.get('buy_order');
+  // WebPay returns token_ws on success, TBK_TOKEN on cancellation
+  const tokenWs   = params.get('token_ws');
+  const tbkToken  = params.get('TBK_TOKEN');
+  const card = document.getElementById('confirmCard');
+
+  if (!buyOrder) {
+    renderResult(card, 'error', '¿Llegaste aquí por error?', 'No se encontró ninguna orden de compra.', null);
+    return;
+  }
+
+  try {
+    // POST confirmation to server
+    const body = { buy_order: buyOrder };
+    if (tokenWs)  body.token_ws  = tokenWs;
+    if (tbkToken) body.TBK_TOKEN = tbkToken;
+    const r = await fetch('/api/store/confirm', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+    });
+    const { data } = await r.json();
+
+    if (!r.ok) { renderResult(card, 'error', 'Compra no encontrada', 'No pudimos verificar tu transacción.', null); return; }
+
+    if (data.status === 'completed') {
+      renderResult(card, 'success', '¡Pago Confirmado!',
+        'Tu compra fue procesada exitosamente. Los beneficios serán aplicados en el servidor.',
+        data);
+    } else if (data.status === 'failed' || tbkToken) {
+      renderResult(card, 'error', 'Pago No Completado',
+        'El pago fue cancelado o rechazado. Puedes intentarlo de nuevo.',
+        data);
+    } else {
+      renderResult(card, 'pending', 'Pago en Proceso',
+        'Tu pago está siendo procesado. Revisa tu historial de compras en unos minutos.',
+        data);
+    }
+  } catch (_) {
+    renderResult(card, 'error', 'Error de conexión', 'No pudimos conectar con el servidor. Intenta de nuevo.', null);
+  }
+});
+
+function renderResult(card, type, title, msg, data) {
+  const icons = { success: '✅', error: '❌', pending: '⏳' };
+  let detailHtml = '';
+  if (data) {
+    detailHtml = `<div class="confirm-detail">
+      <div class="confirm-detail-row"><span class="confirm-detail-label">Artículo</span><span class="confirm-detail-value">${esc(data.item_name)}</span></div>
+      <div class="confirm-detail-row"><span class="confirm-detail-label">Monto</span><span class="confirm-detail-value">$${parseFloat(data.item_price).toFixed(2)}</span></div>
+      <div class="confirm-detail-row"><span class="confirm-detail-label">Orden</span><span class="confirm-detail-value" style="font-size:.75rem;word-break:break-all">${esc(data.buy_order)}</span></div>
+      <div class="confirm-detail-row"><span class="confirm-detail-label">Estado</span><span class="confirm-detail-value ${type === 'success' ? 'green' : type === 'error' ? 'red' : 'yellow'}">${type === 'success' ? 'Completada' : type === 'error' ? 'Fallida' : 'Pendiente'}</span></div>
+    </div>`;
+  }
+  card.innerHTML = `
+    <div class="confirm-icon">${icons[type] || '❓'}</div>
+    <div class="confirm-title">${esc(title)}</div>
+    <div class="confirm-sub">${esc(msg)}</div>
+    ${detailHtml}
+    <div class="btn-row">
+      ${type === 'success' ? '<a class="confirm-btn" href="/perfil">Ver mis compras</a>' : ''}
+      <a class="confirm-btn ${type === 'success' ? 'secondary' : ''}" href="/tienda">Volver a la tienda</a>
+    </div>`;
+}
+
+function esc(s) { return s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : ''; }
+</script>
+<script src="/js/user-nav.js"></script>
+</body>
+</html>
