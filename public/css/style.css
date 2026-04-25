@@ -417,9 +417,10 @@ section { padding: 100px 0; }
 .team-title { font-size: 0.8rem; color: var(--muted); margin-bottom: 14px; letter-spacing: 0.05em; }
 
 .team-bio {
-  font-size: 0.875rem; color: var(--text-bright);
+  font-size: 0.82rem; color: var(--text-bright);
   line-height: 1.75; margin-bottom: 16px;
 }
+.team-bio * { font-size: inherit; }
 
 .team-meta { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
 .team-card-founder .team-meta { justify-content: flex-start; }
