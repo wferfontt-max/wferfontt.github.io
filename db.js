@@ -42,7 +42,7 @@ if (isPg) {
       const trimmed = sql.trimStart().toUpperCase();
       // Auto-append RETURNING id for INSERT statements so we can get lastInsertRowid
       const finalSql = trimmed.startsWith('INSERT') && !trimmed.includes('RETURNING')
-        ? toPos(sql) + ' RETURNING id'
+        ? toPos(sql) + ' RETURNING *'
         : toPos(sql);
       const { rows, rowCount } = await pool.query(finalSql, params);
       return { lastInsertRowid: rows[0]?.id ?? null, changes: rowCount };
