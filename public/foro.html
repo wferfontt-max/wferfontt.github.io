@@ -61,6 +61,7 @@
     .post-actions { display: flex; align-items: center; gap: 16px; margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(30,30,48,0.6); }
     .like-btn { display: flex; align-items: center; gap: 6px; padding: 5px 12px; border: 1px solid #1e1e30; border-radius: 20px; background: transparent; color: #8888aa; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; }
     .like-btn:hover, .like-btn.liked { border-color: #ef4444; color: #ef4444; background: rgba(239,68,68,0.08); }
+    .toast.error { border-left-color: #ef4444; }
 
     /* Lightbox */
     .lightbox { position: fixed; inset: 0; z-index: 9000; background: rgba(0,0,0,0.92); display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
@@ -301,6 +302,18 @@
 
   async function likePost(id, btn) {
     if (likedPosts.has(id)) return;
+    // Require login
+    try {
+      const auth = await fetch('/api/me');
+      if (!auth.ok) {
+        showToast('Debes iniciar sesión para reaccionar. ¡Regístrate gratis!', true);
+        setTimeout(() => { window.location.href = '/login?redirect=/foro'; }, 1800);
+        return;
+      }
+    } catch (_) {
+      showToast('No se pudo verificar tu sesión.', true);
+      return;
+    }
     try {
       await fetch(`/api/forum/posts/${id}/like`, { method: 'POST' });
       likedPosts.add(id);

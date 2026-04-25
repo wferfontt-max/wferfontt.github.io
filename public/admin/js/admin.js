@@ -329,8 +329,50 @@ async function loadAdmins() {
 }
 
 /* ── Rich Text Editor ──────────────────────────────────────── */
+let _richSel = null;
+
+function saveRichSel() {
+  const s = window.getSelection();
+  if (s && s.rangeCount > 0) _richSel = s.getRangeAt(0).cloneRange();
+}
+function restoreRichSel() {
+  if (!_richSel) return;
+  const s = window.getSelection();
+  s.removeAllRanges();
+  s.addRange(_richSel);
+}
+
 function rfmt(cmd, val) {
-  document.execCommand(cmd, false, val || null);
+  restoreRichSel();
+  document.execCommand(cmd, false, val !== undefined ? val : null);
+  updateRichToolbarState();
+}
+function rfmtBlock(sel) {
+  if (!sel.value) return;
+  rfmt('formatBlock', sel.value);
+  sel.value = '<p>';
+}
+function rfmtSize(sel) {
+  if (!sel.value) return;
+  rfmt('fontSize', sel.value);
+  sel.value = '3';
+}
+function rfmtColor(input) {
+  restoreRichSel();
+  document.execCommand('foreColor', false, input.value);
+}
+function rfmtLink() {
+  restoreRichSel();
+  const url = prompt('URL del enlace (ej: https://ejemplo.com):');
+  if (url) document.execCommand('createLink', false, url);
+}
+function updateRichToolbarState() {
+  const cmds = ['bold','italic','underline','strikeThrough','justifyLeft','justifyCenter','justifyRight','justifyFull','insertUnorderedList','insertOrderedList'];
+  cmds.forEach(cmd => {
+    document.querySelectorAll(`[data-cmd="${cmd}"]`).forEach(btn => {
+      btn.classList.toggle('active', document.queryCommandState(cmd));
+    });
+  });
 }
 
 function richContent(text) {
@@ -344,19 +386,54 @@ function richEditor(id, content, minH) {
   return `
   <div class="rich-wrap">
     <div class="rich-toolbar">
-      <button type="button" class="rtb" onmousedown="event.preventDefault()" onclick="rfmt('bold')" title="Negrita"><b>B</b></button>
-      <button type="button" class="rtb" onmousedown="event.preventDefault()" onclick="rfmt('italic')" title="Cursiva"><i>I</i></button>
-      <button type="button" class="rtb" onmousedown="event.preventDefault()" onclick="rfmt('underline')" title="Subrayado"><u>U</u></button>
+      <button type="button" class="rtb" onmousedown="event.preventDefault()" onclick="rfmt('undo')" title="Deshacer (Ctrl+Z)">↩</button>
+      <button type="button" class="rtb" onmousedown="event.preventDefault()" onclick="rfmt('redo')" title="Rehacer (Ctrl+Y)">↪</button>
       <div class="rtb-sep"></div>
-      <button type="button" class="rtb" onmousedown="event.preventDefault()" onclick="rfmt('justifyLeft')" title="Izquierda">&#x2580;&#x2580;&#x2580;</button>
-      <button type="button" class="rtb" onmousedown="event.preventDefault()" onclick="rfmt('justifyCenter')" title="Centrar">&#x2261;</button>
-      <button type="button" class="rtb" onmousedown="event.preventDefault()" onclick="rfmt('justifyRight')" title="Derecha">&#x2592;&#x2592;&#x25A0;</button>
-      <button type="button" class="rtb" onmousedown="event.preventDefault()" onclick="rfmt('justifyFull')" title="Justificar" style="font-weight:700;letter-spacing:-1px">&#9644;&#9644;</button>
+      <select class="rtb-select" title="Estilo de párrafo" onchange="rfmtBlock(this)">
+        <option value="<p>">Párrafo</option>
+        <option value="<h1>">Título 1</option>
+        <option value="<h2>">Título 2</option>
+        <option value="<h3>">Título 3</option>
+        <option value="<blockquote>">Cita</option>
+      </select>
+      <select class="rtb-select" title="Tamaño de texto" onchange="rfmtSize(this)">
+        <option value="3">Normal</option>
+        <option value="1">Muy peq.</option>
+        <option value="2">Pequeño</option>
+        <option value="4">Grande</option>
+        <option value="5">Muy grande</option>
+        <option value="6">Extra grande</option>
+      </select>
       <div class="rtb-sep"></div>
-      <button type="button" class="rtb" onmousedown="event.preventDefault()" onclick="rfmt('insertUnorderedList')" title="Lista">&#8226; Lista</button>
-      <button type="button" class="rtb" onmousedown="event.preventDefault()" onclick="rfmt('formatBlock','<h3>')" title="Título">H3</button>
+      <button type="button" class="rtb" data-cmd="bold" onmousedown="event.preventDefault()" onclick="rfmt('bold')" title="Negrita (Ctrl+B)"><b>B</b></button>
+      <button type="button" class="rtb" data-cmd="italic" onmousedown="event.preventDefault()" onclick="rfmt('italic')" title="Cursiva (Ctrl+I)"><i>I</i></button>
+      <button type="button" class="rtb" data-cmd="underline" onmousedown="event.preventDefault()" onclick="rfmt('underline')" title="Subrayado (Ctrl+U)"><u>U</u></button>
+      <button type="button" class="rtb" data-cmd="strikeThrough" onmousedown="event.preventDefault()" onclick="rfmt('strikeThrough')" title="Tachado"><s>S</s></button>
+      <div class="rtb-sep"></div>
+      <label class="rtb-color-wrap" title="Color de texto">
+        A&nbsp;<input type="color" class="rtb-color-input" value="#ffffff" onchange="rfmtColor(this)" onclick="saveRichSel()" title="Color de texto">
+      </label>
+      <div class="rtb-sep"></div>
+      <button type="button" class="rtb" data-cmd="justifyLeft" onmousedown="event.preventDefault()" onclick="rfmt('justifyLeft')" title="Alinear izquierda">&#x21e4;</button>
+      <button type="button" class="rtb" data-cmd="justifyCenter" onmousedown="event.preventDefault()" onclick="rfmt('justifyCenter')" title="Centrar">&#x2261;</button>
+      <button type="button" class="rtb" data-cmd="justifyRight" onmousedown="event.preventDefault()" onclick="rfmt('justifyRight')" title="Alinear derecha">&#x21e5;</button>
+      <button type="button" class="rtb" data-cmd="justifyFull" onmousedown="event.preventDefault()" onclick="rfmt('justifyFull')" title="Justificar">&#x2263;</button>
+      <div class="rtb-sep"></div>
+      <button type="button" class="rtb" data-cmd="insertUnorderedList" onmousedown="event.preventDefault()" onclick="rfmt('insertUnorderedList')" title="Lista con viñetas">• Lista</button>
+      <button type="button" class="rtb" data-cmd="insertOrderedList" onmousedown="event.preventDefault()" onclick="rfmt('insertOrderedList')" title="Lista numerada">1. Lista</button>
+      <div class="rtb-sep"></div>
+      <button type="button" class="rtb" onmousedown="event.preventDefault()" onclick="rfmt('outdent')" title="Reducir sangría">&#x21e4;</button>
+      <button type="button" class="rtb" onmousedown="event.preventDefault()" onclick="rfmt('indent')" title="Aumentar sangría">&#x21e5;</button>
+      <div class="rtb-sep"></div>
+      <button type="button" class="rtb" onmousedown="event.preventDefault()" onclick="rfmtLink()" title="Insertar enlace">&#x1f517;</button>
+      <button type="button" class="rtb" onmousedown="event.preventDefault()" onclick="rfmt('insertHorizontalRule')" title="Línea separadora">&#x2500;</button>
+      <button type="button" class="rtb" onmousedown="event.preventDefault()" onclick="rfmt('removeFormat')" title="Limpiar formato" style="color:#f87171">&#x2715;</button>
     </div>
-    <div class="rich-editor" id="${id}" contenteditable="true" ${h}>${richContent(content)}</div>
+    <div class="rich-editor" id="${id}" contenteditable="true" ${h}
+      onblur="saveRichSel()"
+      onkeyup="updateRichToolbarState()"
+      onmouseup="updateRichToolbarState()"
+    >${richContent(content)}</div>
   </div>`;
 }
 
