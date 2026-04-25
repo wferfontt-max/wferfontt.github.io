@@ -17,6 +17,7 @@ const PORT = process.env.PORT || 3000;
 
 initDatabase();
 
+app.set('trust proxy', 1);
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
@@ -25,7 +26,11 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'furious-industries-secret-key-2024',
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: false, httpOnly: true, maxAge: 24 * 60 * 60 * 1000 },
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000,
+  },
 }));
 
 app.use(express.static(path.join(__dirname, 'public')));
