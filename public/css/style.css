@@ -7,10 +7,10 @@
   --bg-card-hover: rgba(16, 16, 30, 0.90);
   --border: #1a1a2e;
   --border-hover: #252540;
-  --primary: #0bb4e8;
-  --primary-light: #22d3ee;
-  --primary-glow: rgba(11, 180, 232, 0.28);
-  --primary-glow-sm: rgba(11, 180, 232, 0.12);
+  --primary: #00c4cc;
+  --primary-light: #00d4de;
+  --primary-glow: rgba(0, 196, 204, 0.28);
+  --primary-glow-sm: rgba(0, 196, 204, 0.12);
   --secondary: #ffd700;
   --text: #b8b8d0;
   --text-light: #e0e0f8;
@@ -20,7 +20,7 @@
   --warning: #f59e0b;
   --danger: #ef4444;
   --info: #3b82f6;
-  --gradient: linear-gradient(135deg, #0bb4e8, #ffd700);
+  --gradient: linear-gradient(135deg, #00c4cc, #ffd700);
 }
 
 /* ── Reset ───────────────────────────────────────────────── */
