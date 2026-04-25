@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -33,7 +33,7 @@
     /* ── Sidebar TOC ── */
     .rules-sidebar {
       position: sticky; top: 88px;
-      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
       padding: 20px; max-height: calc(100vh - 120px); overflow-y: auto;
     }
     .rules-sidebar h4 { font-family: 'Orbitron', sans-serif; font-size: .75rem; color: var(--muted); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 14px; }
@@ -57,11 +57,11 @@
       flex-shrink: 0;
     }
     .rule-category-name { font-family: 'Orbitron', sans-serif; font-size: 1rem; font-weight: 700; color: var(--text-bright); }
-    .rule-category-count { margin-left: auto; font-size: .75rem; color: var(--muted); background: var(--surface); padding: 3px 10px; border-radius: 20px; border: 1px solid var(--border); }
+    .rule-category-count { margin-left: auto; font-size: .75rem; color: var(--muted); background: var(--bg-card); padding: 3px 10px; border-radius: 20px; border: 1px solid var(--border); }
 
     /* ── Rule cards ── */
     .rule-card {
-      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
       margin-bottom: 12px; overflow: hidden; transition: border-color .2s;
     }
     .rule-card:hover { border-color: rgba(11,180,232,.4); }
@@ -132,7 +132,6 @@
       <a href="/registro">Registro</a>
       <a href="/admin/login" class="nav-admin">⚙ Admin</a>
     </div>
-    <button class="nav-join-btn" id="connectBtn" onclick="copyIP()">CONECTAR</button>
     <button class="nav-mobile-toggle" id="mobileToggle" aria-label="Menu">
       <span></span><span></span><span></span>
     </button>
