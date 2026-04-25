@@ -1,11 +1,10 @@
 const nodemailer = require('nodemailer');
-const { getDb } = require('../database');
+const db = require('../db');
 
-function getSmtpConfig() {
-  const db = getDb();
-  const rows = db.prepare(
+async function getSmtpConfig() {
+  const rows = await db.all(
     "SELECT key, value FROM server_settings WHERE key IN ('smtp_host','smtp_port','smtp_user','smtp_pass','smtp_from','site_url')"
-  ).all();
+  );
   return rows.reduce((a, r) => { a[r.key] = r.value; return a; }, {});
 }
 
@@ -26,7 +25,7 @@ const HR = `<hr style="border:none;border-top:1px solid #1e1e30;margin:24px 0;">
 const BTN = (link, label) => `<div style="text-align:center;margin:28px 0;"><a href="${link}" style="display:inline-block;padding:14px 32px;background:#ff4500;color:#fff;font-weight:700;text-decoration:none;border-radius:8px;font-size:.95rem;">${label}</a></div>`;
 
 async function sendVerificationEmail(user, token) {
-  const cfg = getSmtpConfig();
+  const cfg = await getSmtpConfig();
   const transporter = createTransporter(cfg);
   if (!transporter) return;
   const siteUrl = (cfg.site_url || 'http://localhost:3000').replace(/\/$/, '');
@@ -46,7 +45,7 @@ async function sendVerificationEmail(user, token) {
 }
 
 async function sendWelcomeEmail(user) {
-  const cfg = getSmtpConfig();
+  const cfg = await getSmtpConfig();
   const transporter = createTransporter(cfg);
   if (!transporter) return;
   const siteUrl = (cfg.site_url || 'http://localhost:3000').replace(/\/$/, '');

@@ -15,8 +15,6 @@ for (const dir of ['rules', 'forum', 'items', 'avatars']) {
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-initDatabase();
-
 app.set('trust proxy', 1);
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors({ origin: true, credentials: true }));
@@ -63,9 +61,19 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Error interno del servidor' });
 });
 
-app.listen(PORT, () => {
-  console.log(`\n🔥 FURIOUS INDUSTRIES RP`);
-  console.log(`   Servidor: http://localhost:${PORT}`);
-  console.log(`   Admin:    http://localhost:${PORT}/admin/login`);
-  console.log(`   Login:    admin / admin123\n`);
-});
+initDatabase()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`\n🔥 FURIOUS INDUSTRIES RP`);
+      console.log(`   Servidor: http://localhost:${PORT}`);
+      console.log(`   Admin:    http://localhost:${PORT}/admin/login`);
+      console.log(`   Login:    admin / admin123\n`);
+    });
+  })
+  .catch(err => {
+    console.error('❌ Error iniciando base de datos:', err.message);
+    if (!process.env.DATABASE_URL) {
+      console.error('   → Para producción: agrega el plugin PostgreSQL en Railway.');
+    }
+    process.exit(1);
+  });
