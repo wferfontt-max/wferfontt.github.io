@@ -214,12 +214,20 @@ async function initDatabase() {
     ['users_discord_id_uq',       'discord_id'],
     ['users_discord_username_uq', 'discord_username'],
   ]) {
+    // Nullify empty strings and duplicate values — keep only the first per value
+    try {
+      await db.exec(`UPDATE users SET ${col} = NULL WHERE ${col} = ''`);
+      await db.exec(
+        `UPDATE users SET ${col} = NULL WHERE ${col} IS NOT NULL AND id NOT IN (SELECT MIN(id) FROM users WHERE ${col} IS NOT NULL GROUP BY ${col})`
+      );
+    } catch (_) {}
+    // Create index; if it still fails (e.g. race condition), warn and continue
     try {
       await db.exec(
         `CREATE UNIQUE INDEX IF NOT EXISTS ${name} ON users(${col}) WHERE ${col} IS NOT NULL`
       );
     } catch (e) {
-      if (!e.message.toLowerCase().includes('already exists')) throw e;
+      console.warn(`⚠️  Índice ${name} no creado: ${e.message}`);
     }
   }
 
