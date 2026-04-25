@@ -376,13 +376,28 @@ function rfmtColor(input) {
   restoreRichSel();
   document.execCommand('foreColor', false, input.value);
 }
+function rfmtJustify() {
+  restoreRichSel();
+  const sel = window.getSelection();
+  if (!sel.rangeCount) return;
+  let node = sel.getRangeAt(0).commonAncestorContainer;
+  if (node.nodeType === Node.TEXT_NODE) node = node.parentNode;
+  while (node && !['P','DIV','H1','H2','H3','LI','BLOCKQUOTE'].includes(node.tagName)) {
+    if (node.classList && node.classList.contains('rich-editor')) break;
+    node = node.parentNode;
+  }
+  if (node && node.tagName) {
+    node.style.textAlign = node.style.textAlign === 'justify' ? '' : 'justify';
+  }
+  updateRichToolbarState();
+}
 function rfmtLink() {
   restoreRichSel();
   const url = prompt('URL del enlace (ej: https://ejemplo.com):');
   if (url) document.execCommand('createLink', false, url);
 }
 function updateRichToolbarState() {
-  const cmds = ['bold','italic','underline','strikeThrough','justifyLeft','justifyCenter','justifyRight','insertUnorderedList','insertOrderedList'];
+  const cmds = ['bold','italic','underline','strikeThrough','justifyLeft','justifyCenter','justifyRight','justifyFull','insertUnorderedList','insertOrderedList'];
   cmds.forEach(cmd => {
     document.querySelectorAll(`[data-cmd="${cmd}"]`).forEach(btn => {
       btn.classList.toggle('active', document.queryCommandState(cmd));
@@ -432,7 +447,7 @@ function richEditor(id, content, minH) {
       <button type="button" class="rtb" data-cmd="justifyLeft" onmousedown="event.preventDefault()" onclick="rfmt('justifyLeft')" title="Alinear izquierda">&#x21e4;</button>
       <button type="button" class="rtb" data-cmd="justifyCenter" onmousedown="event.preventDefault()" onclick="rfmt('justifyCenter')" title="Centrar">&#x2261;</button>
       <button type="button" class="rtb" data-cmd="justifyRight" onmousedown="event.preventDefault()" onclick="rfmt('justifyRight')" title="Alinear derecha">&#x21e5;</button>
-
+      <button type="button" class="rtb" data-cmd="justifyFull" onmousedown="event.preventDefault()" onclick="rfmtJustify()" title="Justificar">&#x2263;</button>
       <div class="rtb-sep"></div>
       <button type="button" class="rtb" data-cmd="insertUnorderedList" onmousedown="event.preventDefault()" onclick="rfmt('insertUnorderedList')" title="Lista con viñetas">• Lista</button>
       <button type="button" class="rtb" data-cmd="insertOrderedList" onmousedown="event.preventDefault()" onclick="rfmt('insertOrderedList')" title="Lista numerada">1. Lista</button>
