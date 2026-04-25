@@ -1,0 +1,15 @@
+# Base de datos SQLite
+*.db
+*.db-shm
+*.db-wal
+
+# Node.js
+node_modules/
+
+# Entorno
+.env
+.env.*
+
+# Sistema
+.DS_Store
+Thumbs.db
