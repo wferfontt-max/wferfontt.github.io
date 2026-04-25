@@ -158,7 +158,7 @@
             <span class="team-role-badge badge-role-founder">${esc(founder.title)}</span>
             <div class="team-name">${esc(founder.name)}</div>
             <div class="team-title">${roleTitles[founder.role] || founder.role}</div>
-            <p class="team-bio">${founder.bio || ''}</p>
+            <div class="team-bio">${founder.bio || ''}</div>
             ${metaHTML(founder)}
           </div>
         </div>`;
@@ -172,7 +172,7 @@
             <span class="team-role-badge badge-role-${m.role}">${esc(m.title)}</span>
             <div class="team-name">${esc(m.name)}</div>
             <div class="team-title">${roleTitles[m.role] || m.role}</div>
-            <p class="team-bio">${m.bio || ''}</p>
+            <div class="team-bio">${m.bio || ''}</div>
             ${metaHTML(m)}
           </div>
         </div>`;

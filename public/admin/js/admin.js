@@ -378,17 +378,7 @@ function rfmtColor(input) {
 }
 function rfmtJustify() {
   restoreRichSel();
-  const sel = window.getSelection();
-  if (!sel.rangeCount) return;
-  let node = sel.getRangeAt(0).commonAncestorContainer;
-  if (node.nodeType === Node.TEXT_NODE) node = node.parentNode;
-  while (node && !['P','DIV','H1','H2','H3','LI','BLOCKQUOTE'].includes(node.tagName)) {
-    if (node.classList && node.classList.contains('rich-editor')) break;
-    node = node.parentNode;
-  }
-  if (node && node.tagName) {
-    node.style.textAlign = node.style.textAlign === 'justify' ? '' : 'justify';
-  }
+  document.execCommand('justifyFull', false, null);
   updateRichToolbarState();
 }
 function rfmtLink() {
