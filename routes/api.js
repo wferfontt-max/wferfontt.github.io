@@ -260,6 +260,40 @@ router.post('/store/buy', requireUser, async (req, res) => {
   res.json({ success: true, data: { redirect_url: redirectUrl, buy_order: buyOrder } });
 });
 
+// ── CART CHECKOUT ─────────────────────────────────────────────────────────────
+router.post('/store/cart-buy', requireUser, async (req, res) => {
+  const { items } = req.body; // [{item_id, quantity}]
+  if (!items || !Array.isArray(items) || items.length === 0)
+    return res.status(400).json({ error: 'El carrito está vacío' });
+
+  const payRow = await db.get("SELECT value FROM server_settings WHERE key = 'store_payment_url'");
+  if (!payRow?.value || payRow.value === '#')
+    return res.status(400).json({ error: 'URL de pago no configurada. Contacta al administrador.' });
+
+  const cartItems = [];
+  for (const { item_id, quantity = 1 } of items) {
+    const item = await db.get('SELECT * FROM items WHERE id = ? AND is_active = 1', [item_id]);
+    if (!item) return res.status(404).json({ error: `Artículo no encontrado` });
+    cartItems.push({ ...item, quantity: Math.max(1, parseInt(quantity) || 1) });
+  }
+
+  const total = cartItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
+  const buyOrder = `CART-${Date.now()}-${req.session.userId}`;
+  const itemSummary = cartItems.map(i => `${i.name}${i.quantity > 1 ? ` x${i.quantity}` : ''}`).join(', ');
+
+  for (const item of cartItems) {
+    await db.run(
+      'INSERT INTO purchases (user_id, item_id, item_name, item_price, buy_order, status) VALUES (?, ?, ?, ?, ?, ?)',
+      [req.session.userId, item.id, `${item.name}${item.quantity > 1 ? ` x${item.quantity}` : ''}`, item.price * item.quantity, buyOrder, 'pending']
+    );
+  }
+
+  const returnUrl = `${req.protocol}://${req.get('host')}/tienda/confirmacion?buy_order=${encodeURIComponent(buyOrder)}`;
+  const sep = payRow.value.includes('?') ? '&' : '?';
+  const redirectUrl = `${payRow.value}${sep}amount=${Math.round(total)}&buy_order=${encodeURIComponent(buyOrder)}&item=${encodeURIComponent(itemSummary)}&return_url=${encodeURIComponent(returnUrl)}`;
+  res.json({ success: true, data: { redirect_url: redirectUrl, buy_order: buyOrder, total } });
+});
+
 router.get('/store/confirm', async (req, res) => {
   const { buy_order, status } = req.query;
   if (!buy_order) return res.status(400).json({ error: 'buy_order requerido' });
