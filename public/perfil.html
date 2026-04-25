@@ -7,11 +7,11 @@
   <link rel="stylesheet" href="/css/style.css">
   <style>
     .profile-hero { padding: 100px 20px 50px; text-align: center; border-bottom: 1px solid #1e1e30; background: linear-gradient(180deg, rgba(6,6,12,0.85) 0%, rgba(10,6,2,0.85) 100%); position: relative; }
-    .profile-hero::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 0%, rgba(255,69,0,0.1) 0%, transparent 65%); pointer-events: none; }
+    .profile-hero::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 0%, rgba(0,196,204,0.1) 0%, transparent 65%); pointer-events: none; }
     .avatar-wrap { position: relative; display: inline-block; margin-bottom: 20px; }
-    .profile-avatar { width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 3px solid rgba(255,69,0,0.5); background: #1e1e30; font-size: 3rem; display: flex; align-items: center; justify-content: center; }
-    .avatar-edit-btn { position: absolute; bottom: 4px; right: 4px; width: 30px; height: 30px; border-radius: 50%; background: #ff4500; border: none; cursor: pointer; font-size: 0.75rem; color: #fff; display: flex; align-items: center; justify-content: center; transition: background .2s; }
-    .avatar-edit-btn:hover { background: #ff6528; }
+    .profile-avatar { width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 3px solid rgba(0,196,204,0.5); background: #1e1e30; font-size: 3rem; display: flex; align-items: center; justify-content: center; }
+    .avatar-edit-btn { position: absolute; bottom: 4px; right: 4px; width: 30px; height: 30px; border-radius: 50%; background: #00c4cc; border: none; cursor: pointer; font-size: 0.75rem; color: #fff; display: flex; align-items: center; justify-content: center; transition: background .2s; }
+    .avatar-edit-btn:hover { background: #00d4de; }
     #avatarInput { display: none; }
     .profile-name { font-family: 'Orbitron', sans-serif; font-size: 1.8rem; font-weight: 700; color: #fff; margin-bottom: 6px; }
     .profile-email { font-size: 0.85rem; color: #5a5a72; margin-bottom: 20px; }
@@ -25,7 +25,7 @@
     /* Stats */
     .profile-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 40px; }
     .stat-card { background: rgba(11,11,22,0.9); border: 1px solid #1e1e30; border-radius: 10px; padding: 20px; text-align: center; }
-    .stat-value { font-family: 'Orbitron', sans-serif; font-size: 1.6rem; font-weight: 700; color: #ff4500; margin-bottom: 4px; }
+    .stat-value { font-family: 'Orbitron', sans-serif; font-size: 1.6rem; font-weight: 700; color: #00c4cc; margin-bottom: 4px; }
     .stat-label { font-size: 0.75rem; color: #5a5a72; text-transform: uppercase; letter-spacing: .08em; }
 
     /* Section headings */
@@ -39,7 +39,7 @@
     .purchase-info { flex: 1; min-width: 0; }
     .purchase-name { font-size: 0.9rem; font-weight: 600; color: #fff; }
     .purchase-date { font-size: 0.75rem; color: #5a5a72; margin-top: 2px; }
-    .purchase-price { font-family: 'Orbitron', sans-serif; font-size: 0.95rem; font-weight: 700; color: #ff4500; white-space: nowrap; }
+    .purchase-price { font-family: 'Orbitron', sans-serif; font-size: 0.95rem; font-weight: 700; color: #00c4cc; white-space: nowrap; }
     .purchase-status { padding: 3px 10px; border-radius: 12px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; }
     .status-completed { background: rgba(22,163,74,.15); color: #4ade80; border: 1px solid rgba(22,163,74,.3); }
     .status-pending { background: rgba(234,179,8,.12); color: #facc15; border: 1px solid rgba(234,179,8,.3); }
@@ -54,9 +54,9 @@
     .form-group { margin-bottom: 0; }
     .form-label { display: block; font-size: 0.75rem; font-weight: 600; color: #8888aa; margin-bottom: 7px; letter-spacing: .05em; text-transform: uppercase; }
     .form-input { width: 100%; background: rgba(5,5,10,0.8); border: 1px solid #1e1e30; border-radius: 7px; padding: 10px 14px; font-size: 0.875rem; color: #fff; outline: none; transition: border-color .2s; box-sizing: border-box; }
-    .form-input:focus { border-color: rgba(255,69,0,.5); box-shadow: 0 0 0 3px rgba(255,69,0,.1); }
-    .save-btn { margin-top: 20px; padding: 11px 28px; background: #ff4500; color: #fff; font-family: 'Orbitron', sans-serif; font-size: 0.8rem; font-weight: 700; letter-spacing: .07em; border: none; border-radius: 7px; cursor: pointer; transition: all .2s; }
-    .save-btn:hover { background: #ff6528; }
+    .form-input:focus { border-color: rgba(0,196,204,.5); box-shadow: 0 0 0 3px rgba(0,196,204,.1); }
+    .save-btn { margin-top: 20px; padding: 11px 28px; background: #00c4cc; color: #fff; font-family: 'Orbitron', sans-serif; font-size: 0.8rem; font-weight: 700; letter-spacing: .07em; border: none; border-radius: 7px; cursor: pointer; transition: all .2s; }
+    .save-btn:hover { background: #00d4de; }
     .save-btn:disabled { opacity: .5; cursor: not-allowed; }
     .discord-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(88,101,242,.12); border: 1px solid rgba(88,101,242,.3); border-radius: 8px; padding: 8px 14px; font-size: 0.82rem; color: #a5b4fc; margin-bottom: 28px; }
   </style>
@@ -163,7 +163,7 @@
 </div>
 
 <footer style="background:rgba(3,3,7,0.95);border-top:1px solid #1e1e30;padding:30px 20px;text-align:center;">
-  <div style="font-family:'Orbitron',sans-serif;font-size:.85rem;color:#fff;margin-bottom:8px;">FURIOUS <span style="color:#ff4500">INDUSTRIES</span> RP</div>
+  <div style="font-family:'Orbitron',sans-serif;font-size:.85rem;color:#fff;margin-bottom:8px;">FURIOUS <span style="color:#00c4cc">INDUSTRIES</span> RP</div>
   <div style="font-size:.8rem;color:#5a5a72;">© 2024 Furious Industries RP. Todos los derechos reservados.</div>
 </footer>
 
@@ -240,7 +240,7 @@
 
   function renderPurchases(list) {
     const el = document.getElementById('purchaseList');
-    if (!list.length) { el.innerHTML = '<div class="empty-msg"><span>🛒</span>Aún no tienes compras. <a href="/tienda" style="color:#ff4500">Visita la tienda</a></div>'; return; }
+    if (!list.length) { el.innerHTML = '<div class="empty-msg"><span>🛒</span>Aún no tienes compras. <a href="/tienda" style="color:#00c4cc">Visita la tienda</a></div>'; return; }
     el.innerHTML = list.map(p => {
       const sc = p.status === 'completed' ? 'status-completed' : p.status === 'failed' ? 'status-failed' : 'status-pending';
       const sl = p.status === 'completed' ? 'Completada' : p.status === 'failed' ? 'Fallida' : 'Pendiente';

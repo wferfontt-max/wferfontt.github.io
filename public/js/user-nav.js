@@ -1,4 +1,4 @@
-/* Injects session-aware links into every page's navbar */
+﻿/* Injects session-aware links into every page's navbar */
 (async function () {
   function esc(s) { return s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : ''; }
 
@@ -21,7 +21,7 @@
       const out = document.createElement('a');
       out.href = '#';
       out.textContent = 'Salir';
-      out.style.color = '#ff4500';
+      out.style.color = '#00c4cc';
       out.addEventListener('click', async e => {
         e.preventDefault();
         await fetch('/api/logout', { method: 'POST' });

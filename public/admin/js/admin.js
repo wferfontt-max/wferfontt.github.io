@@ -1,4 +1,4 @@
-/* ── State ─────────────────────────────────────────────────── */
+﻿/* ── State ─────────────────────────────────────────────────── */
 let currentPage = 'dashboard';
 let currentAdmin = null;
 let modalMode = null; // 'add' | 'edit'
@@ -530,7 +530,7 @@ const formTemplates = {
         <option value="criminal" ${data?.type==='criminal'?'selected':''}>Criminal</option>
         <option value="civilian" ${data?.type==='civilian'?'selected':''}>Civil</option>
       </select></div>
-      <div class="form-group"><label>Color</label><input type="color" id="f-color" value="${data?.color||'#ff4500'}" /></div>
+      <div class="form-group"><label>Color</label><input type="color" id="f-color" value="${data?.color||'#00c4cc'}" /></div>
     </div>
     <div class="form-row">
       <div class="form-group"><label>Líder</label><input type="text" id="f-leader" value="${esc(data?.leader||'')}" /></div>
