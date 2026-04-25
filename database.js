@@ -209,6 +209,20 @@ async function initDatabase() {
     }
   }
 
+  // ── Unique indexes for Discord fields (partial: multiple NULLs allowed) ────
+  for (const [name, col] of [
+    ['users_discord_id_uq',       'discord_id'],
+    ['users_discord_username_uq', 'discord_username'],
+  ]) {
+    try {
+      await db.exec(
+        `CREATE UNIQUE INDEX IF NOT EXISTS ${name} ON users(${col}) WHERE ${col} IS NOT NULL`
+      );
+    } catch (e) {
+      if (!e.message.toLowerCase().includes('already exists')) throw e;
+    }
+  }
+
   // ── Default superadmin ────────────────────────────────────────────────────
   const adminExists = await db.get('SELECT id FROM admins WHERE username = ?', ['admin']);
   if (!adminExists) {

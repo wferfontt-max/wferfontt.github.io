@@ -154,6 +154,15 @@ router.post('/register', async (req, res) => {
   if (await db.get('SELECT id FROM users WHERE email = ?', [email.toLowerCase().trim()]))
     return res.status(409).json({ error: 'El correo electrónico ya está registrado' });
 
+  if (discord_id?.trim()) {
+    if (await db.get('SELECT id FROM users WHERE discord_id = ?', [discord_id.trim()]))
+      return res.status(409).json({ error: 'Ese Discord ID ya está registrado en otra cuenta' });
+  }
+  if (discord_username?.trim()) {
+    if (await db.get('SELECT id FROM users WHERE discord_username = ?', [discord_username.trim()]))
+      return res.status(409).json({ error: 'Ese nick de Discord ya está registrado en otra cuenta' });
+  }
+
   const bcrypt = require('bcryptjs');
   const crypto = require('crypto');
   const hash = bcrypt.hashSync(password, 10);
@@ -223,6 +232,16 @@ router.get('/me', requireUser, async (req, res) => {
 router.put('/me', requireUser, async (req, res) => {
   const { full_name, discord_username, discord_id } = req.body;
   if (!full_name) return res.status(400).json({ error: 'El nombre es requerido' });
+
+  if (discord_id?.trim()) {
+    if (await db.get('SELECT id FROM users WHERE discord_id = ? AND id != ?', [discord_id.trim(), req.session.userId]))
+      return res.status(409).json({ error: 'Ese Discord ID ya está registrado en otra cuenta' });
+  }
+  if (discord_username?.trim()) {
+    if (await db.get('SELECT id FROM users WHERE discord_username = ? AND id != ?', [discord_username.trim(), req.session.userId]))
+      return res.status(409).json({ error: 'Ese nick de Discord ya está registrado en otra cuenta' });
+  }
+
   await db.run(
     'UPDATE users SET full_name = ?, discord_username = ?, discord_id = ? WHERE id = ?',
     [full_name.trim(), discord_username?.trim() || null, discord_id?.trim() || null, req.session.userId]
