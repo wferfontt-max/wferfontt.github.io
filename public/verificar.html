@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -28,14 +28,14 @@
     </div>
     <div class="nav-links" id="navLinks">
       <a href="/">Inicio</a>
-      <a href="/equipo" target="_blank" rel="noopener" >Equipo</a>
-      <a href="/facciones" target="_blank" rel="noopener" >Facciones</a>
-      <a href="/noticias" target="_blank" rel="noopener" >Noticias</a>
-      <a href="/reglas" target="_blank" rel="noopener" >Reglas</a>
-      <a href="/foro" target="_blank" rel="noopener" >Foro</a>
-      <a href="/tienda" target="_blank" rel="noopener" >Tienda</a>
+      <a href="/equipo">Equipo</a>
+      <a href="/facciones">Facciones</a>
+      <a href="/noticias">Noticias</a>
+      <a href="/reglas">Reglas</a>
+      <a href="/foro">Foro</a>
+      <a href="/tienda">Tienda</a>
       <a href="#" id="navDiscord" target="_blank" rel="noopener" style="color:#5865f2">Discord</a>
-      <a href="/registro" target="_blank" rel="noopener" >Registro</a>
+      <a href="/registro">Registro</a>
       <a href="/admin/login" class="nav-admin">⚙ Admin</a>
     </div>
     <button class="nav-mobile-toggle" id="mobileToggle" aria-label="Menu">
@@ -85,7 +85,7 @@ function render(type, title, msg) {
     <div class="verify-title">${esc(title)}</div>
     <div class="verify-sub">${esc(msg)}</div>
     <div class="btn-row" style="margin-top:8px;">
-      ${type === 'success' ? '<a class="verify-btn" href="/login" target="_blank" rel="noopener" >Iniciar Sesión</a>' : ''}
+      ${type === 'success' ? '<a class="verify-btn" href="/login">Iniciar Sesión</a>' : ''}
       <a class="verify-btn ${type === 'success' ? 'secondary' : ''}" href="/">Ir al Inicio</a>
     </div>`;
 }
