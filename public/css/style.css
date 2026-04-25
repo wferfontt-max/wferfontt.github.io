@@ -335,8 +335,8 @@ section { padding: 100px 0; }
 .team-card-founder::before { background: linear-gradient(90deg, #f59e0b, #ff8c00); }
 .team-card[data-role="cofounder"]::before { background: linear-gradient(90deg, #94a3b8, #cbd5e1); }
 .team-card[data-role="developer"]::before { background: linear-gradient(90deg, #06b6d4, #0891b2); }
-.team-card[data-role="staff"]::before,
-.team-card[data-role="moderator"]::before { background: linear-gradient(90deg, #00c4cc, #00d4de); }
+.team-card[data-role="staff"]::before { background: linear-gradient(90deg, #00c4cc, #00d4de); }
+.team-card[data-role="moderator"]::before { background: linear-gradient(90deg, #8b5cf6, #7c3aed); }
 .team-card[data-role="admin"]::before { background: linear-gradient(90deg, #ef4444, #dc2626); }
 
 /* Avatar */
@@ -417,7 +417,7 @@ section { padding: 100px 0; }
 .team-title { font-size: 0.8rem; color: var(--muted); margin-bottom: 14px; letter-spacing: 0.05em; }
 
 .team-bio {
-  font-size: 0.875rem; color: var(--text);
+  font-size: 0.875rem; color: var(--text-bright);
   line-height: 1.75; margin-bottom: 16px;
 }
 
