@@ -1,8 +1,10 @@
 const { DatabaseSync } = require('node:sqlite');
 const bcrypt = require('bcryptjs');
 const path = require('path');
+const fs = require('fs');
 
 const DB_PATH = process.env.DATABASE_PATH || path.join(__dirname, 'furious.db');
+fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
 let db;
 
 function getDb() {
