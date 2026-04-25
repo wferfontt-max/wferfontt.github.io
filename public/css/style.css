@@ -456,7 +456,8 @@ section { padding: 100px 0; }
 .faction-short { font-family: 'Orbitron', sans-serif; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.2em; }
 .faction-name { font-family: 'Rajdhani', sans-serif; font-size: 1.2rem; font-weight: 700; color: var(--text-bright); }
 .faction-badge { padding: 4px 10px; border-radius: 12px; font-size: 0.7rem; font-weight: 600; background: rgba(255,255,255,0.06); }
-.faction-desc { font-size: 0.875rem; color: var(--text-bright); line-height: 1.6; margin-bottom: 20px; }
+.faction-desc { font-size: 0.875rem; color: var(--text-bright) !important; line-height: 1.6; margin-bottom: 20px; }
+.faction-desc * { color: inherit !important; }
 .faction-meta { display: flex; gap: 20px; }
 .faction-meta-item { display: flex; flex-direction: column; gap: 2px; }
 .faction-meta-label { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }

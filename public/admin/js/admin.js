@@ -373,6 +373,8 @@ function rfmtSize(sel) {
   sel.value = '3';
 }
 function rfmtColor(input) {
+  const editor = document.querySelector('.rich-editor[contenteditable]');
+  if (editor) editor.focus();
   restoreRichSel();
   document.execCommand('foreColor', false, input.value);
 }
