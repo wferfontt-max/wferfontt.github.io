@@ -378,7 +378,24 @@ function rfmtColor(input) {
 }
 function rfmtJustify() {
   restoreRichSel();
-  document.execCommand('justifyFull', false, null);
+  const sel = window.getSelection();
+  const editor = document.querySelector('.rich-editor[contenteditable]');
+  if (!editor) return;
+  if (!sel || !sel.rangeCount) {
+    editor.querySelectorAll('p,div,h1,h2,h3,li,blockquote').forEach(el => { el.style.textAlign = 'justify'; });
+    updateRichToolbarState(); return;
+  }
+  const range = sel.getRangeAt(0);
+  let node = range.commonAncestorContainer;
+  if (node.nodeType === 3) node = node.parentNode;
+  if (node === editor) {
+    editor.querySelectorAll('p,div,h1,h2,h3,li,blockquote').forEach(el => {
+      if (range.intersectsNode(el)) el.style.textAlign = el.style.textAlign === 'justify' ? '' : 'justify';
+    });
+  } else {
+    while (node && node !== editor && !['P','DIV','H1','H2','H3','LI','BLOCKQUOTE'].includes(node.tagName)) node = node.parentNode;
+    if (node && node !== editor) node.style.textAlign = node.style.textAlign === 'justify' ? '' : 'justify';
+  }
   updateRichToolbarState();
 }
 function rfmtLink() {
@@ -451,8 +468,8 @@ function richEditor(id, content, minH) {
     </div>
     <div class="rich-editor" id="${id}" contenteditable="true" ${h}
       onblur="saveRichSel()"
-      onkeyup="updateRichToolbarState()"
-      onmouseup="updateRichToolbarState()"
+      onkeyup="saveRichSel(); updateRichToolbarState()"
+      onmouseup="saveRichSel(); updateRichToolbarState()"
     >${richContent(content)}</div>
   </div>`;
 }
