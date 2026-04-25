@@ -6,12 +6,6 @@
   <title>Foro — Furious Industries RP</title>
   <link rel="stylesheet" href="/css/style.css">
   <style>
-    .forum-hero { background: linear-gradient(135deg, rgba(6,6,10,0.82) 0%, rgba(0,6,15,0.82) 100%); padding: 100px 20px 60px; text-align: center; position: relative; overflow: hidden; border-bottom: 1px solid #1e1e30; }
-    .forum-hero::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 0%, rgba(59,130,246,0.1) 0%, transparent 70%); pointer-events: none; }
-    .forum-hero-badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 16px; border: 1px solid rgba(59,130,246,0.3); border-radius: 20px; background: rgba(59,130,246,0.08); font-size: 0.75rem; letter-spacing: 0.15em; color: #3b82f6; text-transform: uppercase; margin-bottom: 20px; }
-    .forum-hero h1 { font-family: 'Orbitron', sans-serif; font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 700; color: #fff; margin-bottom: 16px; }
-    .forum-hero p { font-size: 1.05rem; color: #8888aa; max-width: 540px; margin: 0 auto; line-height: 1.7; }
-
     .forum-wrap { max-width: 1100px; margin: 0 auto; padding: 50px 20px; display: grid; grid-template-columns: 1fr 340px; gap: 30px; }
     @media(max-width:768px) { .forum-wrap { grid-template-columns: 1fr; } }
 
@@ -24,26 +18,26 @@
       width: 100%; padding: 9px 12px; background: #13131f; border: 1px solid #252535;
       border-radius: 4px; color: #fff; font-size: 0.875rem; font-family: inherit; transition: border-color 0.2s; resize: vertical;
     }
-    .fform-group input:focus, .fform-group textarea:focus, .fform-group select:focus { outline: none; border-color: #3b82f6; }
+    .fform-group input:focus, .fform-group textarea:focus, .fform-group select:focus { outline: none; border-color: #ff4500; box-shadow: 0 0 0 2px rgba(255,69,0,0.15); }
     .fform-group select option { background: #13131f; }
     .file-label { display: flex; align-items: center; gap: 8px; padding: 9px 12px; background: #13131f; border: 1px dashed #252535; border-radius: 4px; cursor: pointer; color: #8888aa; font-size: 0.8rem; transition: all 0.2s; }
-    .file-label:hover { border-color: #3b82f6; color: #fff; }
+    .file-label:hover { border-color: #ff4500; color: #fff; }
     .file-label input { display: none; }
     #filePreview { margin-top: 8px; border-radius: 6px; max-width: 100%; max-height: 180px; object-fit: cover; display: none; }
-    .submit-btn { width: 100%; padding: 12px; background: #3b82f6; color: #fff; font-family: 'Orbitron', sans-serif; font-size: 0.8rem; font-weight: 700; letter-spacing: .06em; border: none; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
-    .submit-btn:hover { background: #2563eb; box-shadow: 0 0 20px rgba(59,130,246,0.35); }
+    .submit-btn { width: 100%; padding: 12px; background: #ff4500; color: #fff; font-family: 'Orbitron', sans-serif; font-size: 0.8rem; font-weight: 700; letter-spacing: .06em; border: none; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+    .submit-btn:hover { background: #ff6528; box-shadow: 0 0 20px rgba(255,69,0,0.35); }
     .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
     /* Filter bar */
     .forum-controls { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
     .forum-filter-btn { padding: 7px 16px; border: 1px solid #1e1e30; border-radius: 20px; background: transparent; color: #8888aa; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; }
-    .forum-filter-btn:hover, .forum-filter-btn.active { border-color: #3b82f6; color: #3b82f6; background: rgba(59,130,246,0.08); }
+    .forum-filter-btn:hover, .forum-filter-btn.active { border-color: #ff4500; color: #ff4500; background: rgba(255,69,0,0.08); }
     .forum-count { margin-left: auto; font-size: 0.8rem; color: #5a5a72; }
 
     /* Post cards */
     .posts-list { display: flex; flex-direction: column; gap: 16px; }
-    .post-card { background: #0f0f1a; border: 1px solid #1e1e30; border-radius: 10px; overflow: hidden; transition: border-color 0.2s; }
-    .post-card:hover { border-color: rgba(59,130,246,0.3); }
+    .post-card { background: #0f0f1a; border: 1px solid #1e1e30; border-radius: 10px; overflow: hidden; transition: all 0.25s; }
+    .post-card:hover { border-color: rgba(255,69,0,0.4); background: rgba(5,5,12,0.97); transform: translateY(-3px); box-shadow: 0 8px 40px rgba(0,0,0,0.55); }
     .post-card-img { width: 100%; max-height: 380px; object-fit: cover; display: block; cursor: pointer; transition: opacity 0.2s; }
     .post-card-img:hover { opacity: 0.9; }
     .post-card-body { padding: 18px 20px; }
@@ -53,7 +47,7 @@
     .post-date { font-size: 0.72rem; color: #5a5a72; margin-top: 1px; }
     .post-category-badge { margin-left: auto; padding: 3px 10px; border-radius: 12px; font-size: 0.7rem; font-weight: 600; }
     .cat-general { background: rgba(90,90,114,0.2); color: #8888aa; }
-    .cat-discusion { background: rgba(59,130,246,0.12); color: #3b82f6; }
+    .cat-discusion { background: rgba(255,69,0,0.12); color: #ff4500; }
     .cat-media { background: rgba(34,197,94,0.12); color: #22c55e; }
     .cat-reporte { background: rgba(239,68,68,0.12); color: #ef4444; }
     .post-title { font-size: 1rem; font-weight: 600; color: #fff; margin-bottom: 8px; }
@@ -103,10 +97,12 @@
 </nav>
 
 <!-- Hero -->
-<section class="forum-hero">
-  <div class="forum-hero-badge">💬 Comunidad</div>
-  <h1>FORO DE LA COMUNIDAD</h1>
-  <p>Comparte momentos, discute estrategias, sube tus mejores fotos del roleplay y conecta con la comunidad.</p>
+<section class="page-hero">
+  <div class="container">
+    <div class="page-hero-badge">💬 Comunidad</div>
+    <h1>FORO DE LA COMUNIDAD</h1>
+    <p>Comparte momentos, discute estrategias, sube tus mejores fotos del roleplay y conecta con la comunidad.</p>
+  </div>
 </section>
 
 <div class="forum-wrap">
@@ -175,9 +171,54 @@
   <img id="lightboxImg" src="" alt="" />
 </div>
 
-<footer style="background:#06060a;border-top:1px solid #1e1e30;padding:30px 20px;text-align:center;margin-top:40px;">
-  <div style="font-family:'Orbitron',sans-serif;font-size:0.85rem;color:#fff;margin-bottom:8px;">FURIOUS <span style="color:#ff4500">INDUSTRIES</span> RP</div>
-  <div style="font-size:0.8rem;color:#5a5a72;">© 2024 Furious Industries RP. Todos los derechos reservados.</div>
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <span class="logo-icon">⚡</span>
+          <span>FURIOUS <span class="logo-accent">INDUSTRIES</span></span>
+        </div>
+        <p>El servidor de roleplay más intenso e inmersivo. Construye tu historia en un mundo sin límites donde cada decisión importa.</p>
+        <div class="footer-social">
+          <a href="#" class="social-link" id="discordFooterLink">Discord</a>
+          <a href="#" class="social-link">YouTube</a>
+          <a href="#" class="social-link">Instagram</a>
+        </div>
+      </div>
+      <div class="footer-links">
+        <h4>Servidor</h4>
+        <ul>
+          <li><a href="/equipo">Equipo</a></li>
+          <li><a href="/facciones">Facciones</a></li>
+          <li><a href="/noticias">Noticias</a></li>
+          <li><a href="/foro">Foro</a></li>
+          <li><a href="/tienda">Tienda</a></li>
+        </ul>
+      </div>
+      <div class="footer-links">
+        <h4>Acceso</h4>
+        <ul>
+          <li><a href="#" onclick="copyServerIP();return false;">Conectar al Servidor</a></li>
+          <li><a href="/admin/login">Panel Admin</a></li>
+          <li><a href="#" id="discordFooterLink2">Discord</a></li>
+        </ul>
+      </div>
+      <div class="footer-server">
+        <h4>Estado del Servidor</h4>
+        <div class="server-status">
+          <div class="status-indicator active"></div>
+          <span>Servidor Online</span>
+        </div>
+        <div class="server-info">IP: <code id="serverIPDisplay">Cargando...</code></div>
+        <button class="footer-connect-btn" onclick="copyServerIP()">COPIAR IP</button>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2024 Furious Industries RP. Todos los derechos reservados.</p>
+      <p>No afiliado con Rockstar Games ni Take-Two Interactive.</p>
+    </div>
+  </div>
 </footer>
 
 <div class="toast" id="toast"></div>
@@ -215,7 +256,16 @@
       const { data } = await r.json();
       const d = document.getElementById('navDiscord');
       if (d && data.discord_url) d.href = data.discord_url;
+      ['discordFooterLink','discordFooterLink2'].forEach(id => { const a = document.getElementById(id); if (a) a.href = data.discord_url || '#'; });
+      window._serverIP = (data.server_ip || 'play.furiousin.com') + ':' + (data.server_port || '30120');
+      const ipEl = document.getElementById('serverIPDisplay');
+      if (ipEl) ipEl.textContent = window._serverIP;
     } catch (_) {}
+  }
+
+  function copyServerIP() {
+    const ip = window._serverIP || 'play.furiousin.com:30120';
+    navigator.clipboard.writeText(ip).then(() => showToast('✓ IP copiada: ' + ip)).catch(() => showToast('IP: ' + ip));
   }
 
   async function loadPosts() {

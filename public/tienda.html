@@ -6,14 +6,6 @@
   <title>Tienda — Furious Industries RP</title>
   <link rel="stylesheet" href="/css/style.css">
   <style>
-    .store-hero { background: linear-gradient(135deg, rgba(6,6,10,0.82) 0%, rgba(15,10,0,0.82) 100%); padding: 100px 20px 60px; text-align: center; position: relative; overflow: hidden; border-bottom: 1px solid #1e1e30; }
-    .store-hero::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 0%, rgba(255,69,0,0.12) 0%, transparent 70%); pointer-events: none; }
-    .store-hero-badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 16px; border: 1px solid rgba(255,69,0,0.3); border-radius: 20px; background: rgba(255,69,0,0.08); font-size: 0.75rem; letter-spacing: 0.15em; color: #ff4500; text-transform: uppercase; margin-bottom: 20px; }
-    .store-hero h1 { font-family: 'Orbitron', sans-serif; font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 700; color: #fff; margin-bottom: 16px; }
-    .store-hero p { font-size: 1.05rem; color: #8888aa; max-width: 540px; margin: 0 auto 32px; line-height: 1.7; }
-    .store-pay-btn { display: inline-flex; align-items: center; gap: 10px; padding: 16px 36px; background: #ff4500; color: #fff; font-family: 'Orbitron', sans-serif; font-size: 0.9rem; font-weight: 700; letter-spacing: 0.08em; border-radius: 6px; text-decoration: none; transition: all 0.25s; box-shadow: 0 0 30px rgba(255,69,0,0.35); }
-    .store-pay-btn:hover { background: #ff6528; box-shadow: 0 0 50px rgba(255,69,0,0.5); transform: translateY(-2px); }
-
     .store-section { max-width: 960px; margin: 0 auto; padding: 60px 20px; }
     .section-heading { font-family: 'Orbitron', sans-serif; font-size: 1.1rem; font-weight: 700; color: #fff; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; }
     .section-heading::after { content: ''; flex: 1; height: 1px; background: #1e1e30; }
@@ -51,7 +43,7 @@
     /* Items */
     .items-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
     .item-card { background: rgba(11,11,22,0.9); border: 1px solid #1e1e30; border-radius: 12px; overflow: hidden; transition: border-color .2s, transform .2s; display: flex; flex-direction: column; }
-    .item-card:hover { border-color: rgba(255,69,0,0.35); transform: translateY(-4px); }
+    .item-card:hover { border-color: rgba(255,69,0,0.4); transform: translateY(-4px); background: rgba(5,5,12,0.97); box-shadow: 0 8px 40px rgba(0,0,0,0.55); }
     .item-card-img { width: 100%; height: 160px; object-fit: cover; background: #1e1e30; display: flex; align-items: center; justify-content: center; font-size: 4rem; flex-shrink: 0; }
     .item-card-img img { width: 100%; height: 100%; object-fit: cover; }
     .item-card-body { padding: 16px; flex: 1; display: flex; flex-direction: column; }
@@ -92,10 +84,12 @@
 </nav>
 
 <!-- Hero -->
-<section class="store-hero">
-  <div class="store-hero-badge">⚡ Apoya al Servidor</div>
-  <h1>TIENDA OFICIAL</h1>
-  <p>Tu apoyo mantiene el servidor activo. Cada donación es recompensada con beneficios exclusivos en el servidor.</p>
+<section class="page-hero">
+  <div class="container">
+    <div class="page-hero-badge">⚡ Apoya al Servidor</div>
+    <h1>TIENDA OFICIAL</h1>
+    <p>Tu apoyo mantiene el servidor activo. Cada donación es recompensada con beneficios exclusivos en el servidor.</p>
+  </div>
 </section>
 
 <!-- Artículos -->
@@ -116,9 +110,54 @@
   </div>
 </div>
 
-<footer style="background:rgba(3,3,7,0.95);border-top:1px solid #1e1e30;padding:30px 20px;text-align:center;">
-  <div style="font-family:'Orbitron',sans-serif;font-size:0.85rem;color:#fff;margin-bottom:8px;">FURIOUS <span style="color:#ff4500">INDUSTRIES</span> RP</div>
-  <div style="font-size:0.8rem;color:#5a5a72;">© 2024 Furious Industries RP. Todos los derechos reservados.</div>
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <span class="logo-icon">⚡</span>
+          <span>FURIOUS <span class="logo-accent">INDUSTRIES</span></span>
+        </div>
+        <p>El servidor de roleplay más intenso e inmersivo. Construye tu historia en un mundo sin límites donde cada decisión importa.</p>
+        <div class="footer-social">
+          <a href="#" class="social-link" id="discordFooterLink">Discord</a>
+          <a href="#" class="social-link">YouTube</a>
+          <a href="#" class="social-link">Instagram</a>
+        </div>
+      </div>
+      <div class="footer-links">
+        <h4>Servidor</h4>
+        <ul>
+          <li><a href="/equipo">Equipo</a></li>
+          <li><a href="/facciones">Facciones</a></li>
+          <li><a href="/noticias">Noticias</a></li>
+          <li><a href="/foro">Foro</a></li>
+          <li><a href="/tienda">Tienda</a></li>
+        </ul>
+      </div>
+      <div class="footer-links">
+        <h4>Acceso</h4>
+        <ul>
+          <li><a href="#" onclick="copyServerIP();return false;">Conectar al Servidor</a></li>
+          <li><a href="/admin/login">Panel Admin</a></li>
+          <li><a href="#" id="discordFooterLink2">Discord</a></li>
+        </ul>
+      </div>
+      <div class="footer-server">
+        <h4>Estado del Servidor</h4>
+        <div class="server-status">
+          <div class="status-indicator active"></div>
+          <span>Servidor Online</span>
+        </div>
+        <div class="server-info">IP: <code id="serverIPDisplay">Cargando...</code></div>
+        <button class="footer-connect-btn" onclick="copyServerIP()">COPIAR IP</button>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2024 Furious Industries RP. Todos los derechos reservados.</p>
+      <p>No afiliado con Rockstar Games ni Take-Two Interactive.</p>
+    </div>
+  </div>
 </footer>
 
 <div class="toast" id="toast"></div>
@@ -132,12 +171,16 @@
       if (meRes.ok) { const md = await meRes.json(); currentUser = md.data; }
     } catch (_) {}
 
-    // Load discord URL
+    // Load stats (discord, server IP)
     try {
       const sr = await fetch('/api/stats');
       const { data } = await sr.json();
       const d = document.getElementById('navDiscord');
       if (d && data.discord_url) d.href = data.discord_url;
+      ['discordFooterLink','discordFooterLink2'].forEach(id => { const a = document.getElementById(id); if (a) a.href = data.discord_url || '#'; });
+      window._serverIP = (data.server_ip || 'play.furiousin.com') + ':' + (data.server_port || '30120');
+      const ipEl = document.getElementById('serverIPDisplay');
+      if (ipEl) ipEl.textContent = window._serverIP;
     } catch (_) {}
 
     loadPayUrl();
@@ -258,6 +301,11 @@
       showToast('Redirigiendo al pago...');
       window.location.href = data.data.redirect_url;
     } catch (_) { showToast('Error de conexión'); btn.disabled = false; btn.textContent = 'COMPRAR'; }
+  }
+
+  function copyServerIP() {
+    const ip = window._serverIP || 'play.furiousin.com:30120';
+    navigator.clipboard.writeText(ip).then(() => showToast('✓ IP copiada: ' + ip)).catch(() => showToast('IP: ' + ip));
   }
 
   function showToast(msg) {
