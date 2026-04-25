@@ -537,9 +537,10 @@ section { padding: 100px 0; }
 .footer-brand .footer-logo { display: flex; align-items: center; gap: 10px; font-family: 'Orbitron', sans-serif; font-size: 1rem; font-weight: 700; color: var(--text-bright); margin-bottom: 16px; }
 .footer-brand .footer-logo .logo-icon { font-size: 1.4rem; }
 .footer-brand p { font-size: 0.875rem; color: var(--text); line-height: 1.7; margin-bottom: 20px; }
-.footer-social { display: flex; gap: 12px; }
-.social-link { padding: 8px 16px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.8rem; color: var(--text); transition: all 0.2s; }
-.social-link:hover { border-color: var(--primary); color: var(--primary); }
+.footer-social { display: flex; gap: 10px; }
+.social-link { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border); border-radius: 6px; color: var(--text); transition: all 0.2s; flex-shrink: 0; }
+.social-link:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-glow-sm); }
+.social-link svg { width: 18px; height: 18px; }
 .footer-links h4 { font-family: 'Rajdhani', sans-serif; font-size: 0.9rem; font-weight: 700; color: var(--text-bright); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 20px; }
 .footer-links ul { display: flex; flex-direction: column; gap: 10px; }
 .footer-links ul a { font-size: 0.875rem; color: var(--text); transition: color 0.2s; }
