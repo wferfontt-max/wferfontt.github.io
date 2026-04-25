@@ -4,14 +4,21 @@
  */
 const path = require('path');
 
-const isPg = !!process.env.DATABASE_URL;
+const rawUrl = process.env.DATABASE_URL || '';
+// Only treat as PostgreSQL if DATABASE_URL is a real connection string (not an unresolved Railway variable reference)
+const isPg = rawUrl.startsWith('postgres://') || rawUrl.startsWith('postgresql://');
 let adapter;
 
 if (isPg) {
   const { Pool } = require('pg');
   const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: rawUrl,
     ssl: { rejectUnauthorized: false },
+  });
+
+  // Prevent unhandled 'error' events from crashing the process
+  pool.on('error', (err) => {
+    console.error('❌ PostgreSQL pool error:', err.message);
   });
 
   // Convert SQLite-style ? placeholders to PostgreSQL $1, $2...
@@ -48,6 +55,10 @@ if (isPg) {
     },
   };
 } else {
+  if (rawUrl && !isPg) {
+    console.warn('⚠️  DATABASE_URL is set but is not a valid PostgreSQL URL. Falling back to SQLite.');
+    console.warn('   Value starts with:', rawUrl.substring(0, 30));
+  }
   const fs = require('fs');
   const { DatabaseSync } = require('node:sqlite');
   const DB_PATH = process.env.DATABASE_PATH || path.join(__dirname, 'furious.db');

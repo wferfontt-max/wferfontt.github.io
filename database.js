@@ -199,7 +199,14 @@ async function initDatabase() {
 
   // Execute each CREATE TABLE individually for pg compatibility
   for (const stmt of tables.split(';').map(s => s.trim()).filter(s => s.length > 10)) {
-    await db.exec(stmt);
+    try {
+      await db.exec(stmt);
+    } catch (err) {
+      const preview = stmt.trim().split('\n')[0].substring(0, 80);
+      console.error(`❌ Schema error near: "${preview}"`);
+      console.error('   Detail:', err.message);
+      throw err;
+    }
   }
 
   // ── Default superadmin ────────────────────────────────────────────────────

@@ -72,6 +72,7 @@ initDatabase()
   })
   .catch(err => {
     console.error('❌ Error iniciando base de datos:', err.message);
+    console.error(err.stack);
     if (!process.env.DATABASE_URL) {
       console.error('   → Para producción: agrega el plugin PostgreSQL en Railway.');
     }
