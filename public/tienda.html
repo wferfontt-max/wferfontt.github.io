@@ -98,18 +98,6 @@
   <p>Tu apoyo mantiene el servidor activo. Cada donación es recompensada con beneficios exclusivos en el servidor.</p>
 </section>
 
-<!-- Beneficios -->
-<div class="store-section">
-  <div class="section-heading">BENEFICIOS DE DONAR</div>
-  <div class="section-sub">Obtén ventajas exclusivas en el servidor al apoyar a Furious Industries RP</div>
-  <div class="perks-grid">
-    <div class="perk-card"><div class="perk-icon">🏆</div><div class="perk-title">Rango VIP</div><div class="perk-desc">Acceso a rango especial en Discord y en el servidor con permisos exclusivos.</div></div>
-    <div class="perk-card"><div class="perk-icon">🚗</div><div class="perk-title">Vehículos</div><div class="perk-desc">Desbloquea acceso a vehículos exclusivos no disponibles para otros jugadores.</div></div>
-    <div class="perk-card"><div class="perk-icon">💰</div><div class="perk-title">Dinero en Juego</div><div class="perk-desc">Recibe una cantidad de dinero in-game para comenzar tu historia en grande.</div></div>
-    <div class="perk-card"><div class="perk-icon">⭐</div><div class="perk-title">Prioridad</div><div class="perk-desc">Cola de prioridad para entrar al servidor cuando está lleno.</div></div>
-  </div>
-</div>
-
 <!-- Artículos -->
 <div class="store-section" style="padding-top:0;">
   <div class="section-heading">ARTÍCULOS DISPONIBLES</div>
@@ -135,7 +123,15 @@
 
 <div class="toast" id="toast"></div>
 <script>
+  let currentUser = null;
+
   document.addEventListener('DOMContentLoaded', async () => {
+    // Check session
+    try {
+      const meRes = await fetch('/api/me');
+      if (meRes.ok) { const md = await meRes.json(); currentUser = md.data; }
+    } catch (_) {}
+
     // Load discord URL
     try {
       const sr = await fetch('/api/stats');
@@ -144,15 +140,6 @@
       if (d && data.discord_url) d.href = data.discord_url;
     } catch (_) {}
 
-    // Load payment URL
-    try {
-      const sr = await fetch('/api/admin/settings').catch(() => null);
-      // settings endpoint requires auth, fall back to stats
-    } catch (_) {}
-
-    // Load store settings via a public endpoint workaround — use server_settings key
-    // We expose store_payment_url via the stats call custom field if needed
-    // For now, load from a dedicated endpoint we'll set up
     loadPayUrl();
     loadItems();
     loadRanking();
@@ -245,7 +232,9 @@
             <div class="item-card-desc">${esc(item.description || '')}</div>
             <div class="item-card-footer">
               <div class="item-card-price">$${parseFloat(item.price).toFixed(2)}</div>
-              <button class="item-buy-btn" id="buy-${item.id}" onclick="buyItem(${item.id}, this)">COMPRAR</button>
+              ${currentUser
+                ? `<button class="item-buy-btn" id="buy-${item.id}" onclick="buyItem(${item.id}, this)">COMPRAR</button>`
+                : `<button class="item-buy-btn" onclick="window.location.href='/login?redirect=/tienda'" style="background:#1e1e30;border:1px solid #ff4500;color:#ff4500;">🔒 Inicia Sesión</button>`}
             </div>
           </div>
         </div>`;
@@ -256,6 +245,7 @@
   }
 
   async function buyItem(itemId, btn) {
+    if (!currentUser) { window.location.href = '/login?redirect=/tienda'; return; }
     btn.disabled = true; btn.textContent = '...';
     try {
       const r = await fetch('/api/store/buy', {
@@ -263,14 +253,10 @@
         body: JSON.stringify({ item_id: itemId }),
       });
       const data = await r.json();
-      if (r.status === 401) {
-        window.location.href = '/login?redirect=/tienda';
-        return;
-      }
+      if (r.status === 401) { window.location.href = '/login?redirect=/tienda'; return; }
       if (!r.ok) { showToast(data.error || 'Error al procesar'); btn.disabled = false; btn.textContent = 'COMPRAR'; return; }
       showToast('Redirigiendo al pago...');
-      window.open(data.data.redirect_url, '_blank');
-      setTimeout(() => { btn.disabled = false; btn.textContent = 'COMPRAR'; }, 3000);
+      window.location.href = data.data.redirect_url;
     } catch (_) { showToast('Error de conexión'); btn.disabled = false; btn.textContent = 'COMPRAR'; }
   }
 
