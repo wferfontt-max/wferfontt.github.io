@@ -124,42 +124,54 @@
   <!-- New post sidebar -->
   <div>
     <div class="new-post-card">
-      <div class="new-post-title">✏️ NUEVO POST</div>
-      <form id="newPostForm" enctype="multipart/form-data">
-        <div class="fform-group">
-          <label>Tu nombre *</label>
-          <input type="text" id="pf-author" placeholder="¿Cómo te llaman en el servidor?" maxlength="50" required />
+      <!-- Shown when NOT logged in -->
+      <div id="loginPrompt" style="display:none">
+        <div class="new-post-title">✏️ NUEVO POST</div>
+        <p style="color:#8888aa;font-size:.875rem;line-height:1.6;margin-bottom:20px;text-align:center;">
+          Solo miembros registrados pueden publicar en el foro.
+        </p>
+        <a href="/registro" style="display:block;padding:12px;background:#ff4500;color:#fff;font-family:'Orbitron',sans-serif;font-size:.78rem;font-weight:700;border-radius:6px;text-decoration:none;margin-bottom:10px;letter-spacing:.05em;text-align:center;">CREAR CUENTA GRATIS</a>
+        <a href="/login?redirect=/foro" style="display:block;padding:12px;background:transparent;color:#8888aa;font-size:.8rem;border:1px solid #252535;border-radius:6px;text-decoration:none;text-align:center;">Iniciar sesión</a>
+      </div>
+      <!-- Shown when logged in -->
+      <div id="postFormWrapper" style="display:none">
+        <div class="new-post-title">✏️ NUEVO POST</div>
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:#13131f;border:1px solid #252535;border-radius:4px;margin-bottom:14px;">
+          <span style="font-size:.75rem;color:#5a5a72;">Publicando como:</span>
+          <span id="authorName" style="font-size:.85rem;color:#fff;font-weight:600;"></span>
         </div>
-        <div class="fform-group">
-          <label>Título *</label>
-          <input type="text" id="pf-title" placeholder="¿De qué trata tu post?" maxlength="100" required />
+        <form id="newPostForm" enctype="multipart/form-data">
+          <div class="fform-group">
+            <label>Título *</label>
+            <input type="text" id="pf-title" placeholder="¿De qué trata tu post?" maxlength="100" required />
+          </div>
+          <div class="fform-group">
+            <label>Categoría</label>
+            <select id="pf-category">
+              <option value="general">General</option>
+              <option value="discusion">Discusión</option>
+              <option value="media">Media / Fotos</option>
+              <option value="reporte">Reporte</option>
+            </select>
+          </div>
+          <div class="fform-group">
+            <label>Contenido</label>
+            <textarea id="pf-content" rows="4" placeholder="Escribe tu mensaje aquí..." maxlength="2000"></textarea>
+          </div>
+          <div class="fform-group">
+            <label>Imagen (opcional)</label>
+            <label class="file-label" id="fileLabel">
+              📷 Seleccionar imagen
+              <input type="file" id="pf-image" accept="image/*" onchange="previewFile(this)" />
+            </label>
+            <img id="filePreview" src="" alt="Preview" />
+          </div>
+          <button type="submit" class="submit-btn" id="submitBtn">PUBLICAR</button>
+        </form>
+        <div id="postSuccess" style="display:none;text-align:center;padding:20px;color:#22c55e;font-size:0.875rem;">
+          ✅ ¡Post publicado exitosamente!<br><br>
+          <button onclick="resetForm()" style="padding:8px 18px;background:transparent;border:1px solid #22c55e;color:#22c55e;border-radius:4px;cursor:pointer;font-size:0.8rem;">Escribir otro</button>
         </div>
-        <div class="fform-group">
-          <label>Categoría</label>
-          <select id="pf-category">
-            <option value="general">General</option>
-            <option value="discusion">Discusión</option>
-            <option value="media">Media / Fotos</option>
-            <option value="reporte">Reporte</option>
-          </select>
-        </div>
-        <div class="fform-group">
-          <label>Contenido</label>
-          <textarea id="pf-content" rows="4" placeholder="Escribe tu mensaje aquí..." maxlength="2000"></textarea>
-        </div>
-        <div class="fform-group">
-          <label>Imagen (opcional)</label>
-          <label class="file-label" id="fileLabel">
-            📷 Seleccionar imagen
-            <input type="file" id="pf-image" accept="image/*" onchange="previewFile(this)" />
-          </label>
-          <img id="filePreview" src="" alt="Preview" />
-        </div>
-        <button type="submit" class="submit-btn" id="submitBtn">PUBLICAR</button>
-      </form>
-      <div id="postSuccess" style="display:none;text-align:center;padding:20px;color:#22c55e;font-size:0.875rem;">
-        ✅ ¡Post publicado exitosamente!<br><br>
-        <button onclick="resetForm()" style="padding:8px 18px;background:transparent;border:1px solid #22c55e;color:#22c55e;border-radius:4px;cursor:pointer;font-size:0.8rem;">Escribir otro</button>
       </div>
     </div>
   </div>
@@ -194,14 +206,6 @@
           <li><a href="/noticias">Noticias</a></li>
           <li><a href="/foro">Foro</a></li>
           <li><a href="/tienda">Tienda</a></li>
-        </ul>
-      </div>
-      <div class="footer-links">
-        <h4>Acceso</h4>
-        <ul>
-          <li><a href="#" onclick="copyServerIP();return false;">Conectar al Servidor</a></li>
-          <li><a href="/admin/login">Panel Admin</a></li>
-          <li><a href="#" id="discordFooterLink2">Discord</a></li>
         </ul>
       </div>
       <div class="footer-server">
@@ -320,16 +324,14 @@
 
   async function submitPost(e) {
     e.preventDefault();
-    const author = document.getElementById('pf-author').value.trim();
     const title = document.getElementById('pf-title').value.trim();
-    if (!author || !title) { showToast('Nombre y título son obligatorios'); return; }
+    if (!title) { showToast('El título es obligatorio'); return; }
 
     const btn = document.getElementById('submitBtn');
     btn.disabled = true; btn.textContent = 'PUBLICANDO...';
 
     try {
       const fd = new FormData();
-      fd.append('author_name', author);
       fd.append('title', title);
       fd.append('content', document.getElementById('pf-content').value);
       fd.append('category', document.getElementById('pf-category').value);
@@ -430,14 +432,18 @@
 </script>
 <script src="/js/user-nav.js"></script>
 <script>
-  // Pre-fill author name from session if logged in
-  fetch('/api/me').then(r => r.ok ? r.json() : null).then(j => {
-    if (!j) return;
-    const nameInput = document.getElementById('pf-author');
-    if (nameInput && !nameInput.value) nameInput.value = j.data.full_name;
-    const avatarUrl = j.data.avatar_url;
-    if (avatarUrl) { window._userAvatar = avatarUrl; window._userName = j.data.full_name; }
-  }).catch(() => {});
+  fetch('/api/me')
+    .then(r => r.ok ? r.json() : null)
+    .then(j => {
+      if (!j) {
+        document.getElementById('loginPrompt').style.display = '';
+      } else {
+        document.getElementById('postFormWrapper').style.display = '';
+        document.getElementById('authorName').textContent = j.data.full_name;
+        if (j.data.avatar_url) window._userAvatar = j.data.avatar_url;
+      }
+    })
+    .catch(() => { document.getElementById('loginPrompt').style.display = ''; });
 </script>
 </body>
 </html>

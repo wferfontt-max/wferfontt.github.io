@@ -201,8 +201,6 @@
       <div class="footer-links">
         <h4>Servidor</h4>
         <ul>
-          <li><a href="#" id="connectFooterBtn">Conectar</a></li>
-          <li><a href="/admin/login">Panel Admin</a></li>
           <li><a href="#">Whitelist</a></li>
         </ul>
       </div>
@@ -254,9 +252,8 @@
     if (!serverIP) return;
     navigator.clipboard.writeText(serverIP).then(() => showToast('¡IP copiada al portapapeles!'));
   }
-  document.getElementById('connectBtn').addEventListener('click', copyIP);
-  document.getElementById('copyIPBtn').addEventListener('click', copyIP);
-  document.getElementById('connectFooterBtn').addEventListener('click', (e) => { e.preventDefault(); copyIP(); });
+  const _copyIPBtn = document.getElementById('copyIPBtn');
+  if (_copyIPBtn) _copyIPBtn.addEventListener('click', copyIP);
 
   /* ── Navbar ── */
   window.addEventListener('scroll', () => {

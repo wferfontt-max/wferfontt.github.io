@@ -120,13 +120,14 @@ router.get('/forum/posts', async (req, res) => {
   res.json({ success: true, data: await db.all(sql, params) });
 });
 
-router.post('/forum/posts', forumUpload.single('image'), async (req, res) => {
-  const { author_name, title, content, category } = req.body;
-  if (!author_name || !title) return res.status(400).json({ error: 'Nombre y título son requeridos' });
+router.post('/forum/posts', requireUser, forumUpload.single('image'), async (req, res) => {
+  const { title, content, category } = req.body;
+  if (!title) return res.status(400).json({ error: 'Título es requerido' });
+  const user = await db.get('SELECT full_name, avatar_url FROM users WHERE id = ?', [req.session.userId]);
   const image_url = req.file ? `/uploads/forum/${req.file.filename}` : null;
   const r = await db.run(
-    'INSERT INTO forum_posts (author_name, title, content, image_url, category) VALUES (?, ?, ?, ?, ?)',
-    [author_name, title, content || null, image_url, category || 'general']
+    'INSERT INTO forum_posts (author_name, author_avatar, title, content, image_url, category) VALUES (?, ?, ?, ?, ?, ?)',
+    [user?.full_name || 'Usuario', user?.avatar_url || null, title, content || null, image_url, category || 'general']
   );
   res.json({ success: true, data: { id: r.lastInsertRowid }, message: 'Post creado exitosamente' });
 });
