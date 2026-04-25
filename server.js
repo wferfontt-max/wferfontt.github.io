@@ -41,7 +41,6 @@ app.use('/api/admin', require('./routes/admin'));
 
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin', 'dashboard.html')));
 app.get('/admin/login', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin', 'login.html')));
-app.get('/reglas', (req, res) => res.sendFile(path.join(__dirname, 'public', 'reglas.html')));
 app.get('/tienda', (req, res) => res.sendFile(path.join(__dirname, 'public', 'tienda.html')));
 app.get('/foro', (req, res) => res.sendFile(path.join(__dirname, 'public', 'foro.html')));
 app.get('/items', (req, res) => res.sendFile(path.join(__dirname, 'public', 'items.html')));
