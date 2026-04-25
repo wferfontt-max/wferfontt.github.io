@@ -285,13 +285,28 @@ async function loadSettings() {
     const { data } = await api('GET', '/api/admin/settings');
     settingsData = {};
     data.forEach(s => settingsData[s.key] = s);
-    document.getElementById('settingsGrid').innerHTML = data.map(s => `
-      <div class="settings-item">
-        <label>${esc(s.description || s.key)}</label>
-        <div class="setting-desc">Clave: <code>${esc(s.key)}</code></div>
-        <input type="${s.key === 'smtp_pass' ? 'password' : 'text'}" id="setting-${s.key}" value="${esc(s.value)}" />
-      </div>
-    `).join('');
+    const regular = data.filter(s => !s.key.startsWith('story_'));
+    const story   = data.filter(s =>  s.key.startsWith('story_'));
+    document.getElementById('settingsGrid').innerHTML =
+      regular.map(s => `
+        <div class="settings-item">
+          <label>${esc(s.description || s.key)}</label>
+          <div class="setting-desc">Clave: <code>${esc(s.key)}</code></div>
+          <input type="${s.key === 'smtp_pass' ? 'password' : 'text'}" id="setting-${s.key}" value="${esc(s.value)}" />
+        </div>
+      `).join('') +
+      (story.length ? `
+        <div class="settings-item" style="grid-column:1/-1;border-top:1px solid rgba(255,255,255,0.08);padding-top:22px;margin-top:12px;">
+          <label style="font-size:1.05rem;color:var(--accent)">Historia del Servidor</label>
+          <div class="setting-desc">Edita el texto de la sección de historia en la página principal</div>
+        </div>` +
+        story.map(s => `
+          <div class="settings-item" style="grid-column:1/-1;">
+            <label>${esc(s.description || s.key)}</label>
+            <div class="setting-desc">Clave: <code>${esc(s.key)}</code></div>
+            <textarea id="setting-${s.key}" rows="${s.value.split('\n').length > 3 ? 7 : 3}" style="width:100%;background:var(--bg-card);border:1px solid rgba(255,255,255,0.1);color:var(--text);padding:10px 12px;border-radius:6px;font-size:.875rem;line-height:1.6;resize:vertical;">${esc(s.value)}</textarea>
+          </div>
+        `).join('') : '');
   } catch (e) { showToast(e.message, 'error'); }
 }
 

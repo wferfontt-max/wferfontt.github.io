@@ -97,6 +97,13 @@ router.get('/team', async (req, res) => {
   res.json({ success: true, data: await db.all('SELECT * FROM team_members WHERE is_active = 1 ORDER BY member_order') });
 });
 
+// ── STORY (public) ───────────────────────────────────────────────────────────
+router.get('/story', async (req, res) => {
+  const rows = await db.all("SELECT key, value FROM server_settings WHERE key LIKE 'story_%'");
+  const data = rows.reduce((a, r) => { a[r.key] = r.value; return a; }, {});
+  res.json({ success: true, data });
+});
+
 // ── STORE SETTINGS (public) ───────────────────────────────────────────────────
 router.get('/store/settings', async (req, res) => {
   const s = await db.get("SELECT value FROM server_settings WHERE key = 'store_payment_url'");
