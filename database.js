@@ -272,6 +272,7 @@ async function initDatabase() {
     ['story_announce_msg', '"Furious vuelve."', 'Historia: Mensaje del anuncio'],
     ['story_act3_post', 'Pero esta vez no era improvisado. El regreso será distinto. Habrá aprendido de sus errores. Tendrá nuevos sistemas, una administración más sólida y reglas claras, pero sin perder la esencia creativa que lo hará especial. Los antiguos jugadores regresarán, y con ellos llegarán nuevos curiosos que querrán formar parte de algo que ya tendrá historia.\n\nFurious Roleplay dejará de ser solo un servidor: se convertirá en una segunda oportunidad.\n\nLas calles volverán a llenarse, las historias crecerán con más fuerza, y la comunidad entenderá algo importante: no se tratará solo del juego, sino de las personas que lo construirán.\n\nY esta vez, no habrá planes de desaparecer.', 'Historia Act III: Texto después del anuncio (párrafos separados por línea en blanco)'],
     ['story_closer_quote', 'Porque Furious ya no será un experimento.<br>Será un mundo que, contra todo pronóstico, ha decidido quedarse.', 'Historia: Cita de cierre'],
+    ['story_image1', '/img/historia.jpg', 'Historia: URL de imagen (entre Acto I y Acto II)'],
   ];
   const insSettingSQL = db.isPg
     ? 'INSERT INTO server_settings (key, value, description) VALUES (?, ?, ?) ON CONFLICT (key) DO NOTHING'

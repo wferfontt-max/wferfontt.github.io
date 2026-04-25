@@ -90,6 +90,9 @@
   .story-closer { text-align:center;margin-top:52px;padding-top:52px;border-top:1px solid rgba(255,255,255,0.06); }
   .story-closer-quote { font-size:clamp(1rem,2.5vw,1.25rem);color:#fff;font-style:italic;line-height:1.8;margin-bottom:12px;text-align:justify; }
   .story-closer-end { font-family:'Orbitron',sans-serif;font-size:.85rem;font-weight:700;color:#00c4cc;letter-spacing:.1em;margin-bottom:36px; }
+  .story-img-wrap { margin:40px 0;border-radius:10px;overflow:hidden;position:relative; }
+  .story-img-wrap img { width:100%;display:block;max-height:380px;object-fit:cover;filter:brightness(0.85); }
+  .story-img-caption { position:absolute;bottom:0;left:0;right:0;padding:14px 20px;background:linear-gradient(0deg,rgba(0,0,0,0.7) 0%,transparent 100%);font-size:.75rem;color:rgba(255,255,255,0.6);letter-spacing:.08em;font-family:'Orbitron',sans-serif; }
 </style>
 <div class="story-wrap">
 
@@ -122,6 +125,7 @@
         paras(s.story_act1_body, 'story-p'),
       '</div>',
       SEP,
+      s.story_image1 ? '<div class="story-img-wrap"><img src="'+s.story_image1+'" alt="Furious Roleplay" loading="lazy"><div class="story-img-caption">FURIOUS ROLEPLAY — Los Santos</div></div>' : '',
       '<div class="story-act">',
         actHeader('II', s.story_act2_title||'EL SILENCIO'),
         '<p class="story-p">'+(s.story_act2_p1||'')+'</p>',
