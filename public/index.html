@@ -166,47 +166,41 @@
 
 
 <!-- ── Features ───────────────────────────────────────────── -->
-<section class="features">
+<section class="features" id="featuresSection">
   <div class="container">
-    <div class="section-header fade-in">
+    <div class="section-header fade-in" id="featuresHeader">
       <span class="section-tag">¿Por qué elegirnos?</span>
       <h2 class="section-title">Una Experiencia Única</h2>
       <p class="section-subtitle">Furious Industries ofrece el mejor roleplay con sistemas únicos y una comunidad increíble</p>
     </div>
-    <div class="features-grid">
-      <div class="feature-card fade-in">
-        <div class="feature-icon">🚗</div>
-        <h3>Vehículos Custom</h3>
-        <p>Más de 500 vehículos únicos con modificaciones personalizadas y sistemas de tunning avanzados exclusivos.</p>
-      </div>
-      <div class="feature-card fade-in">
-        <div class="feature-icon">💼</div>
-        <h3>Empleos Únicos</h3>
-        <p>Decenas de trabajos legales e ilegales con progresión real, jerarquías y recompensas exclusivas.</p>
-      </div>
-      <div class="feature-card fade-in">
-        <div class="feature-icon">🏠</div>
-        <h3>Sistema Inmobiliario</h3>
-        <p>Compra, vende y alquila propiedades en la ciudad. Desde apartamentos hasta mansiones y negocios.</p>
-      </div>
-      <div class="feature-card fade-in">
-        <div class="feature-icon">💰</div>
-        <h3>Economía Real</h3>
-        <p>Sistema económico balanceado con bancos, inversiones, mercado negro y sistema de impuestos.</p>
-      </div>
-      <div class="feature-card fade-in">
-        <div class="feature-icon">⚔️</div>
-        <h3>Territorios y Guerras</h3>
-        <p>Controla territorios estratégicos, establece alianzas y domina la ciudad con tu organización.</p>
-      </div>
-      <div class="feature-card fade-in">
-        <div class="feature-icon">🎭</div>
-        <h3>Eventos Especiales</h3>
-        <p>Eventos temáticos regulares con recompensas exclusivas y experiencias únicas creadas por el staff.</p>
-      </div>
+    <div class="features-grid" id="featuresGrid">
+      <div class="feature-card fade-in"><div class="feature-icon">🚗</div><h3>Vehículos Custom</h3><p>Más de 500 vehículos únicos con modificaciones personalizadas y sistemas de tunning avanzados exclusivos.</p></div>
+      <div class="feature-card fade-in"><div class="feature-icon">💼</div><h3>Empleos Únicos</h3><p>Decenas de trabajos legales e ilegales con progresión real, jerarquías y recompensas exclusivas.</p></div>
+      <div class="feature-card fade-in"><div class="feature-icon">🏠</div><h3>Sistema Inmobiliario</h3><p>Compra, vende y alquila propiedades en la ciudad. Desde apartamentos hasta mansiones y negocios.</p></div>
+      <div class="feature-card fade-in"><div class="feature-icon">💰</div><h3>Economía Real</h3><p>Sistema económico balanceado con bancos, inversiones, mercado negro y sistema de impuestos.</p></div>
+      <div class="feature-card fade-in"><div class="feature-icon">⚔️</div><h3>Territorios y Guerras</h3><p>Controla territorios estratégicos, establece alianzas y domina la ciudad con tu organización.</p></div>
+      <div class="feature-card fade-in"><div class="feature-icon">🎭</div><h3>Eventos Especiales</h3><p>Eventos temáticos regulares con recompensas exclusivas y experiencias únicas creadas por el staff.</p></div>
     </div>
   </div>
 </section>
+<script>
+fetch('/api/features').then(r=>r.ok?r.json():null).then(j=>{
+  if(!j||!j.data) return;
+  const d=j.data;
+  const hdr=document.getElementById('featuresHeader');
+  if(hdr){
+    if(d.features_section_tag) hdr.querySelector('.section-tag').textContent=d.features_section_tag;
+    if(d.features_section_title) hdr.querySelector('.section-title').textContent=d.features_section_title;
+    if(d.features_section_subtitle) hdr.querySelector('.section-subtitle').textContent=d.features_section_subtitle;
+  }
+  const cards=[];
+  for(let i=1;i<=6;i++){
+    const icon=d['feature_'+i+'_icon'], title=d['feature_'+i+'_title'], desc=d['feature_'+i+'_desc'];
+    if(title||icon) cards.push('<div class="feature-card fade-in"><div class="feature-icon">'+(icon||'')+'</div><h3>'+(title||'')+'</h3><p>'+(desc||'')+'</p></div>');
+  }
+  if(cards.length) document.getElementById('featuresGrid').innerHTML=cards.join('');
+}).catch(()=>{});
+</script>
 
 <!-- ── Donors ─────────────────────────────────────────────── -->
 <section class="donors-section" id="donadores">
