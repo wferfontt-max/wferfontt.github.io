@@ -69,29 +69,6 @@ router.get('/rules', async (req, res) => {
   res.json({ success: true, data: grouped });
 });
 
-// ── STATS ────────────────────────────────────────────────────────────────────
-router.get('/stats', async (req, res) => {
-  const [settings, totalPlayers, activeFactions, totalChars] = await Promise.all([
-    db.all("SELECT key, value FROM server_settings WHERE key IN ('players_online','server_ip','discord_url','server_port')"),
-    db.get('SELECT COUNT(*) as c FROM players'),
-    db.get('SELECT COUNT(*) as c FROM factions WHERE is_active = 1'),
-    db.get('SELECT COUNT(*) as c FROM characters'),
-  ]);
-  const s = settings.reduce((a, x) => { a[x.key] = x.value; return a; }, {});
-  res.json({
-    success: true,
-    data: {
-      players_online: parseInt(s.players_online) || 0,
-      total_players: parseInt(totalPlayers.c),
-      active_factions: parseInt(activeFactions.c),
-      total_characters: parseInt(totalChars.c),
-      server_ip: s.server_ip || 'play.furiousin.com',
-      server_port: s.server_port || '30120',
-      discord_url: s.discord_url || '#',
-    }
-  });
-});
-
 // ── TEAM ─────────────────────────────────────────────────────────────────────
 router.get('/team', async (req, res) => {
   res.json({ success: true, data: await db.all('SELECT * FROM team_members WHERE is_active = 1 ORDER BY member_order') });
@@ -107,7 +84,11 @@ router.get('/story', async (req, res) => {
 // ── STATS (public) ───────────────────────────────────────────────────────────
 router.get('/stats', async (req, res) => {
   let registered = 0, online = 0, discord_members = 0, rating = 5.0;
-  try { const r = await db.get('SELECT COUNT(*) as c FROM users'); registered = Math.max(0, parseInt(String(r?.c || 0), 10) || 0); } catch (_) {}
+  try {
+    const ru = await db.get('SELECT COUNT(*) as c FROM users');
+    const ra = await db.get('SELECT COUNT(*) as c FROM admins');
+    registered = (parseInt(String(ru?.c || 0), 10) || 0) + (parseInt(String(ra?.c || 0), 10) || 0);
+  } catch (_) {}
   try {
     const rows = await db.all("SELECT key, value FROM server_settings WHERE key IN ('stats_online','stats_rating','stats_discord_members','discord_guild_id','discord_bot_token')");
     const s = rows.reduce((a, r) => { a[r.key] = r.value; return a; }, {});
