@@ -906,6 +906,7 @@ async function loadUsuarios() {
           <td><span class="badge badge-${u.is_active ? 'success' : 'danger'}">${u.is_active ? 'Activo' : 'Inactivo'}</span></td>
           <td><div class="td-actions">
             <button class="btn-edit" onclick="toggleUser(${u.id})">${u.is_active ? 'Desactivar' : 'Activar'}</button>
+            ${currentAdmin.role === 'superadmin' ? `<button class="btn-delete" onclick="deleteUser(${u.id},'${esc(u.full_name)}')">Eliminar</button>` : ''}
           </div></td>
         </tr>`).join('')
       : '<tr><td colspan="10" class="empty-state"><span class="empty-icon">🧑‍💻</span>Sin usuarios registrados</td></tr>';
@@ -916,6 +917,15 @@ async function toggleUser(id) {
   try {
     await api('PATCH', `/api/admin/users/${id}/toggle`);
     showToast('Estado de usuario actualizado', 'success');
+    await loadUsuarios();
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+async function deleteUser(id, name) {
+  if (!confirm(`¿Eliminar permanentemente la cuenta de "${name}"?\nEsta acción no se puede deshacer.`)) return;
+  try {
+    await api('DELETE', `/api/admin/users/${id}`);
+    showToast('Cuenta eliminada permanentemente', 'success');
     await loadUsuarios();
   } catch (e) { showToast(e.message, 'error'); }
 }

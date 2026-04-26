@@ -479,6 +479,14 @@ router.patch('/users/:id/toggle', async (req, res) => {
   res.json({ success: true, message: newActive ? 'Usuario activado' : 'Usuario desactivado' });
 });
 
+router.delete('/users/:id', requireSuperAdmin, async (req, res) => {
+  const user = await db.get('SELECT id, full_name FROM users WHERE id = ?', [req.params.id]);
+  if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
+  await db.run('DELETE FROM users WHERE id = ?', [req.params.id]);
+  log(req, 'DELETE_USER', 'user', req.params.id, `Eliminó cuenta de usuario: ${user.full_name}`);
+  res.json({ success: true, message: 'Cuenta eliminada permanentemente' });
+});
+
 // ── PURCHASES ─────────────────────────────────────────────────────────────────
 router.get('/purchases', async (req, res) => {
   const rows = await db.all(`

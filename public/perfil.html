@@ -152,10 +152,12 @@
       <div class="form-group">
         <label class="form-label">Usuario Discord</label>
         <input class="form-input" type="text" id="editDiscordUser" placeholder="usuario#0000">
+        <small id="discordUserLock" style="display:none;color:#8888aa;font-size:.72rem;margin-top:4px;">🔒 No editable una vez registrado</small>
       </div>
       <div class="form-group">
         <label class="form-label">ID Discord</label>
         <input class="form-input" type="text" id="editDiscordId" placeholder="123456789012345678">
+        <small id="discordIdLock" style="display:none;color:#8888aa;font-size:.72rem;margin-top:4px;">🔒 No editable una vez registrado</small>
       </div>
     </div>
     <button class="save-btn" id="saveBtn" onclick="saveProfile()">GUARDAR CAMBIOS</button>
@@ -226,6 +228,14 @@
     document.getElementById('editEmail').value = data.email || '';
     document.getElementById('editDiscordUser').value = data.discord_username || '';
     document.getElementById('editDiscordId').value = data.discord_id || '';
+    if (data.discord_username) {
+      document.getElementById('editDiscordUser').disabled = true;
+      document.getElementById('discordUserLock').style.display = 'block';
+    }
+    if (data.discord_id) {
+      document.getElementById('editDiscordId').disabled = true;
+      document.getElementById('discordIdLock').style.display = 'block';
+    }
     if (data.discord_username) {
       document.getElementById('discordConnected').style.display = 'inline-flex';
       document.getElementById('discordBadgeText').textContent = data.discord_username + (data.discord_id ? ' · ' + data.discord_id : '');

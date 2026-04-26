@@ -204,13 +204,7 @@
   <div class="container">
     <div class="reviews-section-header">
       <div class="section-tag">Comunidad</div>
-      <h2 class="section-title">Valoraciones del Servidor</h2>
-      <div class="avg-stars-row">
-        <span class="avg-stars-big" id="avgStarsDisplay">☆☆☆☆☆</span>
-        <span class="avg-num-big" id="avgNumDisplay">—</span>
-        <span style="font-size:1.1rem;color:var(--muted)">/ 5</span>
-      </div>
-      <p class="avg-total-txt" id="reviewsTotalDisplay">Cargando valoraciones...</p>
+      <h2 class="section-title">Reseñas de nuestros jugadores</h2>
     </div>
 
     <div class="review-form-card">
@@ -369,7 +363,9 @@
           ${p.image_url ? `<img class="post-card-img" src="${esc(p.image_url)}" alt="${esc(p.title)}" loading="lazy" onclick="openLightbox('${esc(p.image_url)}')" />` : ''}
           <div class="post-card-body">
             <div class="post-card-header">
-              <div class="post-avatar">👤</div>
+              ${p.author_avatar
+                ? `<img src="${esc(p.author_avatar)}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;">`
+                : '<div class="post-avatar">👤</div>'}
               <div>
                 <div class="post-author">${esc(p.author_name)}</div>
                 <div class="post-date">${formatDate(p.created_at)}</div>
@@ -521,23 +517,16 @@
     try {
       const r = await fetch('/api/reviews');
       const json = await r.json();
-      renderReviews(json.data || [], json.avg, json.total);
+      renderReviews(json.data || []);
     } catch (_) {
       document.getElementById('reviewsGrid').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)">No se pudieron cargar las valoraciones.</div>';
     }
   }
 
-  function renderReviews(reviews, avg, total) {
-    const avgNum = avg ? parseFloat(avg) : 0;
-    document.getElementById('avgStarsDisplay').textContent = avgNum ? starsDisplay(avgNum) : '☆☆☆☆☆';
-    document.getElementById('avgNumDisplay').textContent = avgNum ? avgNum.toFixed(1) : '—';
-    document.getElementById('reviewsTotalDisplay').textContent = total
-      ? `Basado en ${total} valoración${total !== 1 ? 'es' : ''} de la comunidad`
-      : 'Sé el primero en valorar el servidor';
-
+  function renderReviews(reviews) {
     const grid = document.getElementById('reviewsGrid');
     if (!reviews.length) {
-      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)">Aún no hay valoraciones. ¡Sé el primero!</div>';
+      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)">Aún no hay reseñas. ¡Sé el primero!</div>';
       return;
     }
     grid.innerHTML = reviews.map(rv => `
@@ -545,7 +534,9 @@
         <div class="review-card-stars">${starsDisplay(rv.rating)}</div>
         ${rv.comment ? `<div class="review-card-comment">"${esc(rv.comment)}"</div>` : ''}
         <div class="review-card-footer">
-          <div class="review-card-avatar">👤</div>
+          ${rv.avatar_url
+            ? `<img src="${esc(rv.avatar_url)}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;flex-shrink:0;">`
+            : '<div class="review-card-avatar">👤</div>'}
           <div>
             <div class="review-card-name">${esc(rv.author_name)}</div>
             <div class="review-card-date">${formatDate(rv.created_at)}</div>

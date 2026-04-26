@@ -133,7 +133,7 @@ router.get('/stats', async (req, res) => {
 router.get('/reviews', async (req, res) => {
   try {
     const [reviews, summary] = await Promise.all([
-      db.all('SELECT id, author_name, comment, rating, created_at FROM reviews ORDER BY created_at DESC LIMIT 50'),
+      db.all('SELECT r.id, r.author_name, r.comment, r.rating, r.created_at, u.avatar_url FROM reviews r LEFT JOIN users u ON r.user_id = u.id ORDER BY r.created_at DESC LIMIT 50'),
       db.get('SELECT AVG(rating) as avg, COUNT(*) as total FROM reviews'),
     ]);
     const avg = summary?.avg ? Math.round(parseFloat(String(summary.avg)) * 10) / 10 : null;
@@ -308,18 +308,24 @@ router.put('/me', requireUser, async (req, res) => {
   const { full_name, discord_username, discord_id } = req.body;
   if (!full_name) return res.status(400).json({ error: 'El nombre es requerido' });
 
-  if (discord_id?.trim()) {
+  const current = await db.get('SELECT discord_username, discord_id FROM users WHERE id = ?', [req.session.userId]);
+
+  // Discord fields are locked once set — ignore incoming value if already registered
+  const newDiscordUser = current?.discord_username || discord_username?.trim() || null;
+  const newDiscordId   = current?.discord_id       || discord_id?.trim()       || null;
+
+  if (!current?.discord_id && discord_id?.trim()) {
     if (await db.get('SELECT id FROM users WHERE discord_id = ? AND id != ?', [discord_id.trim(), req.session.userId]))
       return res.status(409).json({ error: 'Ese Discord ID ya está registrado en otra cuenta' });
   }
-  if (discord_username?.trim()) {
+  if (!current?.discord_username && discord_username?.trim()) {
     if (await db.get('SELECT id FROM users WHERE discord_username = ? AND id != ?', [discord_username.trim(), req.session.userId]))
       return res.status(409).json({ error: 'Ese nick de Discord ya está registrado en otra cuenta' });
   }
 
   await db.run(
     'UPDATE users SET full_name = ?, discord_username = ?, discord_id = ? WHERE id = ?',
-    [full_name.trim(), discord_username?.trim() || null, discord_id?.trim() || null, req.session.userId]
+    [full_name.trim(), newDiscordUser, newDiscordId, req.session.userId]
   );
   res.json({ success: true, message: 'Perfil actualizado' });
 });
