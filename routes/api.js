@@ -123,7 +123,7 @@ router.get('/stats', async (req, res) => {
         }
       } catch (_) {}
     }
-    res.json({ success: true, data: { registered: parseInt(userCount?.c || 0), online: parseInt(s.stats_online || 0), discord_members: discordMembers, rating: parseFloat(s.stats_rating || '5.0') } });
+    res.json({ success: true, data: { registered: Number(userCount?.c) || 0, online: Number(s.stats_online) || 0, discord_members: Number(discordMembers) || 0, rating: Number(s.stats_rating) || 5.0 } });
   } catch (_) {
     res.json({ success: true, data: { registered: 0, online: 0, discord_members: 0, rating: 5.0 } });
   }

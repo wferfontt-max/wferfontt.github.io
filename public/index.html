@@ -223,27 +223,31 @@ fetch('/api/features').then(r=>r.ok?r.json():null).then(j=>{
   if(cards.length) document.getElementById('featuresGrid').innerHTML=cards.join('');
 }).catch(()=>{});
 
-function animCount(id, target, isFloat) {
+function animCount(id, raw, isFloat) {
   const el = document.getElementById(id);
   if (!el) return;
-  const dur = 1400, steps = 50, step = dur / steps;
-  let cur = 0, i = 0;
+  const target = isFloat ? (parseFloat(raw) || 0) : (parseInt(raw) || 0);
+  if (!isFinite(target)) { el.textContent = isFloat ? '0.0' : '0'; return; }
+  const steps = 50;
+  let i = 0;
   const t = setInterval(() => {
-    i++; cur = Math.round(target * (i / steps));
-    el.textContent = isFloat ? cur.toFixed(1) : cur.toLocaleString('es-CL');
-    if (i >= steps) { el.textContent = isFloat ? parseFloat(target).toFixed(1) : Math.round(target).toLocaleString('es-CL'); clearInterval(t); }
-  }, step);
+    i++;
+    const v = target * (i / steps);
+    el.textContent = isFloat ? v.toFixed(1) : Math.round(v).toLocaleString('es-CL');
+    if (i >= steps) { el.textContent = isFloat ? target.toFixed(1) : target.toLocaleString('es-CL'); clearInterval(t); }
+  }, 28);
 }
 fetch('/api/stats').then(r=>r.ok?r.json():null).then(j=>{
-  if(!j||!j.data) return;
-  const d=j.data;
-  animCount('stat-registered', d.registered);
-  animCount('stat-online', d.online);
-  animCount('stat-discord', d.discord_members);
-  animCount('stat-rating', d.rating, true);
+  const d = (j && j.data) ? j.data : {};
+  animCount('stat-registered', d.registered ?? 0);
+  animCount('stat-online',     d.online ?? 0);
+  animCount('stat-discord',    d.discord_members ?? 0);
+  animCount('stat-rating',     d.rating ?? 5.0, true);
 }).catch(()=>{
-  ['stat-registered','stat-online','stat-discord'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent='0'; });
-  const r=document.getElementById('stat-rating'); if(r) r.textContent='5.0';
+  animCount('stat-registered', 0);
+  animCount('stat-online', 0);
+  animCount('stat-discord', 0);
+  animCount('stat-rating', 5.0, true);
 });
 </script>
 
