@@ -204,6 +204,24 @@ async function initDatabase() {
       rating INTEGER NOT NULL,
       ${TS('created_at')}
     );
+
+    CREATE TABLE IF NOT EXISTS forum_comments (
+      ${ID},
+      post_id INTEGER REFERENCES forum_posts(id) ON DELETE CASCADE,
+      user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      author_name TEXT NOT NULL,
+      author_avatar TEXT,
+      content TEXT NOT NULL,
+      ${TS('created_at')}
+    );
+
+    CREATE TABLE IF NOT EXISTS forum_reactions (
+      ${ID},
+      post_id INTEGER REFERENCES forum_posts(id) ON DELETE CASCADE,
+      user_id INTEGER NOT NULL,
+      emoji TEXT NOT NULL,
+      ${TS('created_at')}
+    );
   `;
 
   // Execute each CREATE TABLE individually for pg compatibility

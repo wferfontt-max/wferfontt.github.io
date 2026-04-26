@@ -191,7 +191,25 @@ router.get('/forum/posts', async (req, res) => {
   if (category && category !== 'all') { sql += ' AND category = ?'; params.push(category); }
   sql += ' ORDER BY created_at DESC LIMIT ?';
   params.push(limit);
-  res.json({ success: true, data: await db.all(sql, params) });
+  const posts = await db.all(sql, params);
+  if (posts.length) {
+    const ids = posts.map(p => p.id);
+    const ph = ids.map(() => '?').join(',');
+    const [ccRows, rcRows] = await Promise.all([
+      db.all(`SELECT post_id, COUNT(*) as c FROM forum_comments WHERE post_id IN (${ph}) GROUP BY post_id`, ids),
+      db.all(`SELECT post_id, emoji, COUNT(*) as c FROM forum_reactions WHERE post_id IN (${ph}) GROUP BY post_id, emoji`, ids),
+    ]);
+    let myReactions = {};
+    if (req.session?.userId) {
+      const mr = await db.all(`SELECT post_id, emoji FROM forum_reactions WHERE post_id IN (${ph}) AND user_id = ?`, [...ids, req.session.userId]);
+      mr.forEach(r => { if (!myReactions[r.post_id]) myReactions[r.post_id] = []; myReactions[r.post_id].push(r.emoji); });
+    }
+    const ccMap = ccRows.reduce((a, r) => { a[r.post_id] = parseInt(String(r.c||0)); return a; }, {});
+    const rcMap = {};
+    rcRows.forEach(r => { if (!rcMap[r.post_id]) rcMap[r.post_id] = []; rcMap[r.post_id].push({ emoji: r.emoji, count: parseInt(String(r.c||0)) }); });
+    posts.forEach(p => { p.comment_count = ccMap[p.id] || 0; p.reactions = rcMap[p.id] || []; p.my_reactions = myReactions[p.id] || []; });
+  }
+  res.json({ success: true, data: posts });
 });
 
 router.post('/forum/posts', requireUser, forumUpload.single('image'), async (req, res) => {
@@ -209,6 +227,47 @@ router.post('/forum/posts', requireUser, forumUpload.single('image'), async (req
 router.post('/forum/posts/:id/like', async (req, res) => {
   await db.run('UPDATE forum_posts SET likes = likes + 1 WHERE id = ? AND is_active = 1', [req.params.id]);
   res.json({ success: true });
+});
+
+router.get('/forum/posts/:id/comments', async (req, res) => {
+  const comments = await db.all('SELECT * FROM forum_comments WHERE post_id = ? ORDER BY created_at ASC', [req.params.id]);
+  res.json({ success: true, data: comments });
+});
+
+router.post('/forum/posts/:id/comments', requireUser, async (req, res) => {
+  const content = (req.body.content || '').trim().substring(0, 1000);
+  if (!content) return res.status(400).json({ error: 'El comentario no puede estar vacío' });
+  const user = await db.get('SELECT full_name, avatar_url FROM users WHERE id = ?', [req.session.userId]);
+  if (!user) return res.status(401).json({ error: 'Usuario no encontrado' });
+  await db.run(
+    'INSERT INTO forum_comments (post_id, user_id, author_name, author_avatar, content) VALUES (?, ?, ?, ?, ?)',
+    [req.params.id, req.session.userId, user.full_name, user.avatar_url || null, content]
+  );
+  res.json({ success: true });
+});
+
+router.get('/forum/posts/:id/reactions', async (req, res) => {
+  const data = await db.all('SELECT emoji, COUNT(*) as count FROM forum_reactions WHERE post_id = ? GROUP BY emoji ORDER BY count DESC', [req.params.id]);
+  let userReactions = [];
+  if (req.session?.userId) {
+    const ur = await db.all('SELECT emoji FROM forum_reactions WHERE post_id = ? AND user_id = ?', [req.params.id, req.session.userId]);
+    userReactions = ur.map(r => r.emoji);
+  }
+  res.json({ success: true, data: data.map(r => ({ emoji: r.emoji, count: parseInt(String(r.count||0)) })), userReactions });
+});
+
+router.post('/forum/posts/:id/reactions', requireUser, async (req, res) => {
+  const ALLOWED = ['👍','❤️','😂','😮','😢','🔥'];
+  const emoji = req.body.emoji;
+  if (!ALLOWED.includes(emoji)) return res.status(400).json({ error: 'Emoji no válido' });
+  const existing = await db.get('SELECT id FROM forum_reactions WHERE post_id = ? AND user_id = ? AND emoji = ?', [req.params.id, req.session.userId, emoji]);
+  if (existing) {
+    await db.run('DELETE FROM forum_reactions WHERE id = ?', [existing.id]);
+    res.json({ success: true, action: 'removed' });
+  } else {
+    await db.run('INSERT INTO forum_reactions (post_id, user_id, emoji) VALUES (?, ?, ?)', [req.params.id, req.session.userId, emoji]);
+    res.json({ success: true, action: 'added' });
+  }
 });
 
 // ── REGISTER ─────────────────────────────────────────────────────────────────

@@ -69,6 +69,34 @@
     .loading-pulse { animation: pulse 1.5s infinite; }
     @keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:1} }
 
+    /* Reactions */
+    .post-reactions { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; flex: 1; }
+    .reaction-pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border: 1px solid #1e1e30; border-radius: 20px; background: transparent; color: #8888aa; font-size: 0.82rem; cursor: pointer; transition: all 0.15s; }
+    .reaction-pill:hover { border-color: rgba(0,196,204,0.4); background: rgba(0,196,204,0.06); }
+    .reaction-pill.mine { border-color: var(--primary); background: rgba(0,196,204,0.12); color: var(--primary); }
+    .emoji-add { padding: 3px 9px; border: 1px dashed #252535; border-radius: 20px; background: transparent; color: #5a5a72; font-size: 0.82rem; cursor: pointer; transition: all 0.15s; }
+    .emoji-add:hover { border-color: #8888aa; color: #aaa; }
+    .emoji-picker-pop { position: fixed; background: #0f0f1a; border: 1px solid #252535; border-radius: 10px; padding: 8px 12px; display: flex; gap: 6px; z-index: 9999; box-shadow: 0 8px 32px rgba(0,0,0,0.6); }
+    .emoji-picker-pop button { background: none; border: none; font-size: 1.4rem; cursor: pointer; padding: 2px 4px; border-radius: 6px; transition: background 0.15s; line-height: 1; }
+    .emoji-picker-pop button:hover { background: rgba(255,255,255,0.1); }
+    .comments-toggle { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border: 1px solid #1e1e30; border-radius: 20px; background: transparent; color: #8888aa; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+    .comments-toggle:hover, .comments-toggle.open { border-color: var(--primary); color: var(--primary); background: rgba(0,196,204,0.06); }
+    .comments-section { border-top: 1px solid rgba(30,30,48,0.6); margin-top: 14px; padding-top: 14px; display: none; }
+    .comment-item { display: flex; gap: 10px; margin-bottom: 14px; }
+    .comment-avatar-img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+    .comment-avatar-ph { width: 28px; height: 28px; border-radius: 50%; background: #1e1e30; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; flex-shrink: 0; }
+    .comment-body { flex: 1; min-width: 0; }
+    .comment-header { display: flex; align-items: center; gap: 8px; margin-bottom: 3px; }
+    .comment-author { font-size: 0.8rem; font-weight: 600; color: #fff; }
+    .comment-date { font-size: 0.68rem; color: #5a5a72; }
+    .comment-text { font-size: 0.845rem; color: #a0a0b8; line-height: 1.55; word-break: break-word; }
+    .comment-form-wrap { display: flex; gap: 8px; align-items: flex-end; margin-top: 10px; }
+    .comment-input { flex: 1; padding: 8px 12px; background: #13131f; border: 1px solid #252535; border-radius: 8px; color: #fff; font-size: 0.85rem; font-family: inherit; resize: none; overflow: hidden; min-height: 36px; max-height: 120px; transition: border-color 0.2s; line-height: 1.4; }
+    .comment-input:focus { outline: none; border-color: var(--primary); }
+    .comment-submit { padding: 8px 14px; background: var(--primary); color: #fff; border: none; border-radius: 8px; font-size: 0.75rem; font-weight: 700; cursor: pointer; font-family: 'Orbitron', sans-serif; white-space: nowrap; transition: all 0.2s; }
+    .comment-submit:hover { background: #00d4de; }
+    .comment-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
     /* Reviews section */
     .reviews-section { padding: 60px 0 80px; border-top: 1px solid var(--border); }
     .reviews-section-header { text-align: center; margin-bottom: 40px; padding: 0 20px; }
@@ -344,6 +372,13 @@
     }
   }
 
+  function buildReactionPills(postId, reactions, mine) {
+    const pills = reactions.map(r =>
+      `<button class="reaction-pill${mine.includes(r.emoji) ? ' mine' : ''}" onclick="toggleReaction(${postId},'${r.emoji}')">${r.emoji} <span>${r.count}</span></button>`
+    ).join('');
+    return pills + `<button class="emoji-add" onclick="toggleEmojiPicker(event,${postId})">＋</button>`;
+  }
+
   function renderPosts() {
     const filtered = currentCat === 'all' ? allPosts : allPosts.filter(p => p.category === currentCat);
     const countEl = document.getElementById('postCount');
@@ -378,7 +413,21 @@
               <button class="like-btn ${liked ? 'liked' : ''}" onclick="likePost(${p.id}, this)">
                 ❤️ <span class="like-count">${p.likes || 0}</span>
               </button>
-              <span style="font-size:0.75rem;color:#5a5a72;">${formatDate(p.created_at)}</span>
+              <div class="post-reactions" id="reactions-${p.id}">
+                ${buildReactionPills(p.id, p.reactions || [], p.my_reactions || [])}
+              </div>
+              <button class="comments-toggle" id="comments-btn-${p.id}" onclick="toggleComments(${p.id})">
+                💬 <span id="comment-count-${p.id}">${p.comment_count || 0}</span>
+              </button>
+            </div>
+            <div class="comments-section" id="comments-${p.id}">
+              <div class="comments-list" id="comments-list-${p.id}"></div>
+              <div class="comment-form-wrap">
+                <textarea class="comment-input" id="comment-input-${p.id}" rows="1" placeholder="Escribe un comentario..." maxlength="500"
+                  onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();submitComment(${p.id})}"
+                  oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"></textarea>
+                <button class="comment-submit" id="comment-submit-${p.id}" onclick="submitComment(${p.id})">ENVIAR</button>
+              </div>
             </div>
           </div>
         </div>`;
@@ -493,6 +542,134 @@
     setTimeout(() => t.classList.remove('show'), 3500);
   }
 
+  // ── Comments & Reactions ────────────────────────────────────────────────────
+  const EMOJIS = ['👍','❤️','😂','😮','😢','🔥'];
+  let openPickerPost = null;
+  const openedComments = {};
+
+  function toggleEmojiPicker(e, postId) {
+    e.stopPropagation();
+    document.querySelectorAll('.emoji-picker-pop').forEach(p => p.remove());
+    if (openPickerPost === postId) { openPickerPost = null; return; }
+    openPickerPost = postId;
+    const btn = e.currentTarget;
+    const rect = btn.getBoundingClientRect();
+    const picker = document.createElement('div');
+    picker.className = 'emoji-picker-pop';
+    picker.style.top = (rect.bottom + window.scrollY + 6) + 'px';
+    picker.style.left = rect.left + 'px';
+    picker.innerHTML = EMOJIS.map(em =>
+      `<button onclick="toggleReaction(${postId},'${em}');document.querySelectorAll('.emoji-picker-pop').forEach(p=>p.remove());openPickerPost=null">${em}</button>`
+    ).join('');
+    document.body.appendChild(picker);
+    setTimeout(() => {
+      document.addEventListener('click', function close() {
+        picker.remove(); openPickerPost = null;
+        document.removeEventListener('click', close);
+      }, { once: true });
+    }, 0);
+  }
+
+  async function toggleReaction(postId, emoji) {
+    if (!window._loggedIn) {
+      showToast('Inicia sesión para reaccionar', true);
+      setTimeout(() => { window.location.href = '/login?redirect=/foro'; }, 1800);
+      return;
+    }
+    try {
+      const r = await fetch(`/api/forum/posts/${postId}/reactions`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ emoji }),
+      });
+      if (!r.ok) throw new Error();
+      await refreshReactions(postId);
+    } catch (_) { showToast('Error al reaccionar', true); }
+  }
+
+  async function refreshReactions(postId) {
+    try {
+      const r = await fetch(`/api/forum/posts/${postId}/reactions`);
+      const { data, userReactions } = await r.json();
+      const container = document.getElementById(`reactions-${postId}`);
+      if (container) container.innerHTML = buildReactionPills(postId, data || [], userReactions || []);
+    } catch (_) {}
+  }
+
+  async function toggleComments(postId) {
+    const section = document.getElementById(`comments-${postId}`);
+    const btn = document.getElementById(`comments-btn-${postId}`);
+    if (!section) return;
+    const isOpen = section.style.display !== 'none';
+    section.style.display = isOpen ? 'none' : 'block';
+    btn.classList.toggle('open', !isOpen);
+    if (!isOpen && !openedComments[postId]) {
+      openedComments[postId] = true;
+      await loadComments(postId);
+    }
+  }
+
+  async function loadComments(postId) {
+    const list = document.getElementById(`comments-list-${postId}`);
+    if (!list) return;
+    list.innerHTML = '<div style="color:var(--muted);font-size:.8rem;padding:6px 0">Cargando...</div>';
+    try {
+      const r = await fetch(`/api/forum/posts/${postId}/comments`);
+      const { data } = await r.json();
+      renderComments(postId, data || []);
+    } catch (_) {
+      list.innerHTML = '<div style="color:var(--muted);font-size:.8rem">Error al cargar</div>';
+    }
+  }
+
+  function renderComments(postId, comments) {
+    const list = document.getElementById(`comments-list-${postId}`);
+    if (!list) return;
+    const countEl = document.getElementById(`comment-count-${postId}`);
+    if (countEl) countEl.textContent = comments.length;
+    if (!comments.length) {
+      list.innerHTML = '<div style="color:var(--muted);font-size:.8rem;padding:4px 0 10px">Sé el primero en comentar ✍️</div>';
+      return;
+    }
+    list.innerHTML = comments.map(c => `
+      <div class="comment-item">
+        ${c.author_avatar
+          ? `<img class="comment-avatar-img" src="${esc(c.author_avatar)}" alt="${esc(c.author_name)}">`
+          : '<div class="comment-avatar-ph">👤</div>'}
+        <div class="comment-body">
+          <div class="comment-header">
+            <span class="comment-author">${esc(c.author_name)}</span>
+            <span class="comment-date">${formatDate(c.created_at)}</span>
+          </div>
+          <div class="comment-text">${esc(c.content)}</div>
+        </div>
+      </div>`).join('');
+  }
+
+  async function submitComment(postId) {
+    if (!window._loggedIn) {
+      showToast('Inicia sesión para comentar', true);
+      setTimeout(() => { window.location.href = '/login?redirect=/foro'; }, 1800);
+      return;
+    }
+    const input = document.getElementById(`comment-input-${postId}`);
+    const btn = document.getElementById(`comment-submit-${postId}`);
+    const content = input?.value.trim();
+    if (!content) return;
+    btn.disabled = true;
+    try {
+      const r = await fetch(`/api/forum/posts/${postId}/comments`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content }),
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || 'Error');
+      input.value = ''; input.style.height = 'auto';
+      await loadComments(postId);
+    } catch (err) {
+      showToast(err.message, true);
+    } finally { btn.disabled = false; }
+  }
+
   // ── Reviews ────────────────────────────────────────────────────────────────
   let selectedRating = 0;
 
@@ -581,9 +758,11 @@
     .then(r => r.ok ? r.json() : null)
     .then(j => {
       if (!j) {
+        window._loggedIn = false;
         document.getElementById('loginPrompt').style.display = '';
         document.getElementById('reviewLoginPrompt').style.display = '';
       } else {
+        window._loggedIn = true;
         document.getElementById('postFormWrapper').style.display = '';
         document.getElementById('authorName').textContent = j.data.full_name;
         if (j.data.avatar_url) window._userAvatar = j.data.avatar_url;
