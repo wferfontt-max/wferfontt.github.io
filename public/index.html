@@ -173,6 +173,28 @@
       <h2 class="section-title">Una Experiencia Única</h2>
       <p class="section-subtitle">Furious Industries ofrece el mejor roleplay con sistemas únicos y una comunidad increíble</p>
     </div>
+    <div class="stats-bar fade-in" id="statsBar">
+      <div class="stat-item">
+        <span class="stat-icon">👥</span>
+        <span class="stat-num" id="stat-registered">—</span>
+        <span class="stat-label">Cuentas Registradas</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-icon">🟢</span>
+        <span class="stat-num" id="stat-online">—</span>
+        <span class="stat-label">Jugadores en Línea</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-icon">💬</span>
+        <span class="stat-num" id="stat-discord">—</span>
+        <span class="stat-label">Miembros Discord</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-icon">⭐</span>
+        <span class="stat-num stat-rating" id="stat-rating">—</span>
+        <span class="stat-label">Valoración</span>
+      </div>
+    </div>
     <div class="features-grid" id="featuresGrid">
       <div class="feature-card fade-in"><div class="feature-icon">🚗</div><h3>Vehículos Custom</h3><p>Más de 500 vehículos únicos con modificaciones personalizadas y sistemas de tunning avanzados exclusivos.</p></div>
       <div class="feature-card fade-in"><div class="feature-icon">💼</div><h3>Empleos Únicos</h3><p>Decenas de trabajos legales e ilegales con progresión real, jerarquías y recompensas exclusivas.</p></div>
@@ -200,6 +222,29 @@ fetch('/api/features').then(r=>r.ok?r.json():null).then(j=>{
   }
   if(cards.length) document.getElementById('featuresGrid').innerHTML=cards.join('');
 }).catch(()=>{});
+
+function animCount(id, target, isFloat) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const dur = 1400, steps = 50, step = dur / steps;
+  let cur = 0, i = 0;
+  const t = setInterval(() => {
+    i++; cur = Math.round(target * (i / steps));
+    el.textContent = isFloat ? cur.toFixed(1) : cur.toLocaleString('es-CL');
+    if (i >= steps) { el.textContent = isFloat ? parseFloat(target).toFixed(1) : Math.round(target).toLocaleString('es-CL'); clearInterval(t); }
+  }, step);
+}
+fetch('/api/stats').then(r=>r.ok?r.json():null).then(j=>{
+  if(!j||!j.data) return;
+  const d=j.data;
+  animCount('stat-registered', d.registered);
+  animCount('stat-online', d.online);
+  animCount('stat-discord', d.discord_members);
+  animCount('stat-rating', d.rating, true);
+}).catch(()=>{
+  ['stat-registered','stat-online','stat-discord'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent='0'; });
+  const r=document.getElementById('stat-rating'); if(r) r.textContent='5.0';
+});
 </script>
 
 <!-- ── Donors ─────────────────────────────────────────────── -->

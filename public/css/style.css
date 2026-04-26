@@ -253,6 +253,15 @@ section { padding: 100px 0; }
 
 /* ── Features ────────────────────────────────────────────── */
 .features { background: var(--bg); }
+.stats-bar { display: flex; gap: 0; justify-content: center; margin: 40px 0 60px; background: rgba(0,0,0,0.35); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.stat-item { flex: 1; padding: 28px 16px; text-align: center; border-right: 1px solid var(--border); position: relative; transition: background 0.2s; }
+.stat-item:last-child { border-right: none; }
+.stat-item:hover { background: rgba(0,196,204,0.05); }
+.stat-icon { font-size: 1.4rem; display: block; margin-bottom: 8px; }
+.stat-num { display: block; font-family: 'Orbitron', sans-serif; font-size: 2rem; font-weight: 700; color: var(--primary); line-height: 1; margin-bottom: 6px; letter-spacing: -0.02em; }
+.stat-label { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+.stat-rating { color: var(--secondary); }
+@media (max-width: 640px) { .stats-bar { flex-wrap: wrap; } .stat-item { flex: 1 1 50%; border-bottom: 1px solid var(--border); } }
 .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
 .feature-card {
   padding: 32px; background: var(--bg-card); border: 1px solid var(--border);
