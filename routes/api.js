@@ -84,17 +84,20 @@ router.get('/story', async (req, res) => {
 // ── STATS (public) ───────────────────────────────────────────────────────────
 router.get('/stats', async (req, res) => {
   let registered = 0, online = 0, discord_members = 0, rating = 5.0;
+  let discord_url = 'https://discord.gg/furiousind', server_ip = 'play.furiousin.com', server_port = '30120';
   try {
     const ru = await db.get('SELECT COUNT(*) as c FROM users');
     const ra = await db.get('SELECT COUNT(*) as c FROM admins');
     registered = (parseInt(String(ru?.c || 0), 10) || 0) + (parseInt(String(ra?.c || 0), 10) || 0);
   } catch (_) {}
   try {
-    const rows = await db.all("SELECT key, value FROM server_settings WHERE key IN ('stats_online','stats_rating','stats_discord_members','discord_guild_id','discord_bot_token')");
+    const rows = await db.all("SELECT key, value FROM server_settings WHERE key IN ('stats_online','stats_discord_members','discord_guild_id','discord_bot_token','discord_url','server_ip','server_port')");
     const s = rows.reduce((a, r) => { a[r.key] = r.value; return a; }, {});
     online = parseInt(s.stats_online, 10) || 0;
-    rating = parseFloat(s.stats_rating) || 5.0;
     discord_members = parseInt(s.stats_discord_members, 10) || 0;
+    if (s.discord_url) discord_url = s.discord_url;
+    if (s.server_ip) server_ip = s.server_ip;
+    if (s.server_port) server_port = s.server_port;
     const botToken = process.env.DISCORD_BOT_TOKEN || s.discord_bot_token || '';
     const guildId = s.discord_guild_id || '';
     if (botToken && guildId) {
@@ -108,7 +111,57 @@ router.get('/stats', async (req, res) => {
       } catch (_) {}
     }
   } catch (_) {}
-  res.json({ success: true, data: { registered, online, discord_members, rating } });
+  try {
+    const avgRow = await db.get('SELECT AVG(rating) as avg FROM reviews');
+    const avg = parseFloat(String(avgRow?.avg || ''));
+    if (!isNaN(avg) && avg > 0) {
+      rating = Math.round(avg * 10) / 10;
+    } else {
+      const sr = await db.get("SELECT value FROM server_settings WHERE key='stats_rating'");
+      rating = parseFloat(sr?.value) || 5.0;
+    }
+  } catch (_) {
+    try {
+      const sr = await db.get("SELECT value FROM server_settings WHERE key='stats_rating'");
+      rating = parseFloat(sr?.value) || 5.0;
+    } catch (_2) {}
+  }
+  res.json({ success: true, data: { registered, online, discord_members, rating, discord_url, server_ip, server_port } });
+});
+
+// ── REVIEWS (public) ─────────────────────────────────────────────────────────
+router.get('/reviews', async (req, res) => {
+  try {
+    const [reviews, summary] = await Promise.all([
+      db.all('SELECT id, author_name, comment, rating, created_at FROM reviews ORDER BY created_at DESC LIMIT 50'),
+      db.get('SELECT AVG(rating) as avg, COUNT(*) as total FROM reviews'),
+    ]);
+    const avg = summary?.avg ? Math.round(parseFloat(String(summary.avg)) * 10) / 10 : null;
+    const total = parseInt(String(summary?.total || 0)) || 0;
+    res.json({ success: true, data: reviews, avg, total });
+  } catch (_) {
+    res.json({ success: true, data: [], avg: null, total: 0 });
+  }
+});
+
+router.post('/reviews', requireUser, async (req, res) => {
+  const rating = parseInt(req.body.rating);
+  const comment = (req.body.comment || '').trim().substring(0, 500);
+  if (!rating || rating < 1 || rating > 5) return res.status(400).json({ error: 'Valoración debe ser entre 1 y 5 estrellas' });
+  try {
+    const user = await db.get('SELECT full_name FROM users WHERE id = ?', [req.session.userId]);
+    if (!user) return res.status(401).json({ error: 'Usuario no encontrado' });
+    const existing = await db.get('SELECT id FROM reviews WHERE user_id = ?', [req.session.userId]);
+    if (existing) {
+      await db.run('UPDATE reviews SET comment = ?, rating = ? WHERE user_id = ?', [comment, rating, req.session.userId]);
+    } else {
+      await db.run('INSERT INTO reviews (user_id, author_name, comment, rating) VALUES (?, ?, ?, ?)',
+        [req.session.userId, user.full_name, comment, rating]);
+    }
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: 'Error al guardar la valoración' });
+  }
 });
 
 // ── FEATURES (public) ────────────────────────────────────────────────────────

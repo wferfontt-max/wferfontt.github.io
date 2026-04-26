@@ -68,6 +68,28 @@
 
     .loading-pulse { animation: pulse 1.5s infinite; }
     @keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:1} }
+
+    /* Reviews section */
+    .reviews-section { padding: 60px 0 80px; border-top: 1px solid var(--border); }
+    .reviews-section-header { text-align: center; margin-bottom: 40px; padding: 0 20px; }
+    .avg-stars-row { display: flex; align-items: center; justify-content: center; gap: 14px; margin: 16px 0 8px; }
+    .avg-stars-big { font-size: 2rem; color: #fbbf24; letter-spacing: 3px; }
+    .avg-num-big { font-family: 'Orbitron', sans-serif; font-size: 2.5rem; font-weight: 700; color: var(--text-bright); }
+    .avg-total-txt { font-size: 0.8rem; color: var(--muted); margin-top: 4px; }
+    .review-form-card { max-width: 600px; margin: 0 auto 48px; background: #0f0f1a; border: 1px solid var(--border); border-radius: 10px; padding: 24px; }
+    .star-picker { display: flex; gap: 6px; font-size: 2.2rem; cursor: pointer; margin: 4px 0; }
+    .star-picker .star-pick { color: #2a2a3a; transition: color 0.1s, transform 0.1s; user-select: none; line-height: 1; }
+    .star-picker .star-pick.active { color: #fbbf24; }
+    .star-picker .star-pick:hover { transform: scale(1.15); }
+    .reviews-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+    .review-card { background: #0f0f1a; border: 1px solid var(--border); border-radius: 10px; padding: 20px; transition: all 0.2s; }
+    .review-card:hover { border-color: rgba(0,196,204,0.3); transform: translateY(-2px); }
+    .review-card-stars { color: #fbbf24; font-size: 1.1rem; letter-spacing: 2px; margin-bottom: 10px; }
+    .review-card-comment { font-size: 0.875rem; color: #a0a0b8; line-height: 1.6; margin-bottom: 14px; font-style: italic; }
+    .review-card-footer { display: flex; align-items: center; gap: 8px; }
+    .review-card-avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--border); display: flex; align-items: center; justify-content: center; font-size: 0.85rem; flex-shrink: 0; }
+    .review-card-name { font-size: 0.8rem; font-weight: 600; color: var(--text-bright); }
+    .review-card-date { font-size: 0.68rem; color: var(--muted); }
   </style>
 </head>
 <body>
@@ -177,6 +199,57 @@
   </div>
 </div>
 
+<!-- Reviews Section -->
+<section class="reviews-section">
+  <div class="container">
+    <div class="reviews-section-header">
+      <div class="section-tag">Comunidad</div>
+      <h2 class="section-title">Valoraciones del Servidor</h2>
+      <div class="avg-stars-row">
+        <span class="avg-stars-big" id="avgStarsDisplay">☆☆☆☆☆</span>
+        <span class="avg-num-big" id="avgNumDisplay">—</span>
+        <span style="font-size:1.1rem;color:var(--muted)">/ 5</span>
+      </div>
+      <p class="avg-total-txt" id="reviewsTotalDisplay">Cargando valoraciones...</p>
+    </div>
+
+    <div class="review-form-card">
+      <div id="reviewLoginPrompt" style="display:none;text-align:center;">
+        <p style="color:var(--muted);font-size:.875rem;margin-bottom:16px;">Inicia sesión para dejar tu valoración</p>
+        <a href="/login?redirect=/foro" style="display:inline-block;padding:10px 28px;background:var(--primary);color:#fff;font-family:'Orbitron',sans-serif;font-size:.78rem;font-weight:700;border-radius:6px;text-decoration:none;letter-spacing:.05em;">INICIAR SESIÓN</a>
+      </div>
+      <div id="reviewFormWrap" style="display:none">
+        <div class="new-post-title">⭐ DEJA TU VALORACIÓN</div>
+        <form id="reviewForm" onsubmit="submitReview(event)">
+          <div class="fform-group">
+            <label>Tu valoración *</label>
+            <div class="star-picker" id="starPicker">
+              <span class="star-pick" data-v="1">★</span>
+              <span class="star-pick" data-v="2">★</span>
+              <span class="star-pick" data-v="3">★</span>
+              <span class="star-pick" data-v="4">★</span>
+              <span class="star-pick" data-v="5">★</span>
+            </div>
+          </div>
+          <div class="fform-group">
+            <label>Comentario <span style="color:var(--muted);font-weight:400;text-transform:none">(opcional)</span></label>
+            <textarea id="rv-comment" rows="3" placeholder="Comparte tu experiencia en el servidor..." maxlength="500" style="resize:none"></textarea>
+          </div>
+          <button type="submit" class="submit-btn" id="reviewSubmitBtn">ENVIAR VALORACIÓN</button>
+        </form>
+        <div id="reviewSuccess" style="display:none;text-align:center;padding:20px;color:#22c55e;font-size:.875rem;">
+          ✅ ¡Gracias por tu valoración!<br><br>
+          <button onclick="showReviewFormAgain()" style="padding:8px 18px;background:transparent;border:1px solid #22c55e;color:#22c55e;border-radius:4px;cursor:pointer;font-size:.8rem;">Modificar valoración</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="reviews-grid" id="reviewsGrid">
+      <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)" class="loading-pulse">Cargando valoraciones...</div>
+    </div>
+  </div>
+</section>
+
 <!-- Lightbox -->
 <div class="lightbox" id="lightbox" onclick="closeLightbox()">
   <button class="lightbox-close" onclick="closeLightbox()">✕</button>
@@ -227,6 +300,8 @@
   document.addEventListener('DOMContentLoaded', () => {
     loadDiscord();
     loadPosts();
+    loadReviews();
+    initStarPicker();
 
     const nav = document.getElementById('navbar');
     window.addEventListener('scroll', () => nav.classList.toggle('scrolled', window.scrollY > 50), { passive: true });
@@ -421,6 +496,93 @@
     t.textContent = msg; t.className = `toast show${isErr?' error':''}`;
     setTimeout(() => t.classList.remove('show'), 3500);
   }
+
+  // ── Reviews ────────────────────────────────────────────────────────────────
+  let selectedRating = 0;
+
+  function initStarPicker() {
+    document.querySelectorAll('#starPicker .star-pick').forEach((s, i) => {
+      s.addEventListener('mouseenter', () => highlightStars(i + 1));
+      s.addEventListener('mouseleave', () => highlightStars(selectedRating));
+      s.addEventListener('click', () => { selectedRating = i + 1; highlightStars(selectedRating); });
+    });
+  }
+
+  function highlightStars(n) {
+    document.querySelectorAll('#starPicker .star-pick').forEach((s, i) => s.classList.toggle('active', i < n));
+  }
+
+  function starsDisplay(rating) {
+    const n = Math.round(rating);
+    return '★'.repeat(n) + '☆'.repeat(5 - n);
+  }
+
+  async function loadReviews() {
+    try {
+      const r = await fetch('/api/reviews');
+      const json = await r.json();
+      renderReviews(json.data || [], json.avg, json.total);
+    } catch (_) {
+      document.getElementById('reviewsGrid').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)">No se pudieron cargar las valoraciones.</div>';
+    }
+  }
+
+  function renderReviews(reviews, avg, total) {
+    const avgNum = avg ? parseFloat(avg) : 0;
+    document.getElementById('avgStarsDisplay').textContent = avgNum ? starsDisplay(avgNum) : '☆☆☆☆☆';
+    document.getElementById('avgNumDisplay').textContent = avgNum ? avgNum.toFixed(1) : '—';
+    document.getElementById('reviewsTotalDisplay').textContent = total
+      ? `Basado en ${total} valoración${total !== 1 ? 'es' : ''} de la comunidad`
+      : 'Sé el primero en valorar el servidor';
+
+    const grid = document.getElementById('reviewsGrid');
+    if (!reviews.length) {
+      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)">Aún no hay valoraciones. ¡Sé el primero!</div>';
+      return;
+    }
+    grid.innerHTML = reviews.map(rv => `
+      <div class="review-card">
+        <div class="review-card-stars">${starsDisplay(rv.rating)}</div>
+        ${rv.comment ? `<div class="review-card-comment">"${esc(rv.comment)}"</div>` : ''}
+        <div class="review-card-footer">
+          <div class="review-card-avatar">👤</div>
+          <div>
+            <div class="review-card-name">${esc(rv.author_name)}</div>
+            <div class="review-card-date">${formatDate(rv.created_at)}</div>
+          </div>
+        </div>
+      </div>`).join('');
+  }
+
+  async function submitReview(e) {
+    e.preventDefault();
+    if (!selectedRating) { showToast('Por favor selecciona una valoración con las estrellas', true); return; }
+    const comment = document.getElementById('rv-comment').value.trim();
+    const btn = document.getElementById('reviewSubmitBtn');
+    btn.disabled = true; btn.textContent = 'ENVIANDO...';
+    try {
+      const r = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rating: selectedRating, comment }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || 'Error al enviar');
+      document.getElementById('reviewForm').style.display = 'none';
+      document.getElementById('reviewSuccess').style.display = 'block';
+      await loadReviews();
+    } catch (err) {
+      showToast(err.message, true);
+      btn.disabled = false; btn.textContent = 'ENVIAR VALORACIÓN';
+    }
+  }
+
+  function showReviewFormAgain() {
+    document.getElementById('reviewForm').style.display = '';
+    document.getElementById('reviewSuccess').style.display = 'none';
+    document.getElementById('reviewSubmitBtn').disabled = false;
+    document.getElementById('reviewSubmitBtn').textContent = 'ENVIAR VALORACIÓN';
+  }
 </script>
 <script src="/js/user-nav.js"></script>
 <script>
@@ -429,13 +591,18 @@
     .then(j => {
       if (!j) {
         document.getElementById('loginPrompt').style.display = '';
+        document.getElementById('reviewLoginPrompt').style.display = '';
       } else {
         document.getElementById('postFormWrapper').style.display = '';
         document.getElementById('authorName').textContent = j.data.full_name;
         if (j.data.avatar_url) window._userAvatar = j.data.avatar_url;
+        document.getElementById('reviewFormWrap').style.display = '';
       }
     })
-    .catch(() => { document.getElementById('loginPrompt').style.display = ''; });
+    .catch(() => {
+      document.getElementById('loginPrompt').style.display = '';
+      document.getElementById('reviewLoginPrompt').style.display = '';
+    });
 </script>
 </body>
 </html>

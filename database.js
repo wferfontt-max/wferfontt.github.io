@@ -195,6 +195,15 @@ async function initDatabase() {
       ${TS('created_at')},
       ${TS('completed_at', false)}
     );
+
+    CREATE TABLE IF NOT EXISTS reviews (
+      ${ID},
+      user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      author_name TEXT NOT NULL,
+      comment TEXT DEFAULT '',
+      rating INTEGER NOT NULL,
+      ${TS('created_at')}
+    );
   `;
 
   // Execute each CREATE TABLE individually for pg compatibility
