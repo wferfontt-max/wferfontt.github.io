@@ -106,27 +106,28 @@ router.get('/story', async (req, res) => {
 
 // ── STATS (public) ───────────────────────────────────────────────────────────
 router.get('/stats', async (req, res) => {
+  let registered = 0, online = 0, discord_members = 0, rating = 5.0;
+  try { const r = await db.get('SELECT COUNT(*) as c FROM users'); registered = Math.max(0, parseInt(String(r?.c || 0), 10) || 0); } catch (_) {}
   try {
-    const userCount = await db.get('SELECT COUNT(*) as c FROM users');
     const rows = await db.all("SELECT key, value FROM server_settings WHERE key IN ('stats_online','stats_rating','stats_discord_members','discord_guild_id','discord_bot_token')");
     const s = rows.reduce((a, r) => { a[r.key] = r.value; return a; }, {});
-    let discordMembers = parseInt(s.stats_discord_members || 0);
+    online = parseInt(s.stats_online, 10) || 0;
+    rating = parseFloat(s.stats_rating) || 5.0;
+    discord_members = parseInt(s.stats_discord_members, 10) || 0;
     const botToken = process.env.DISCORD_BOT_TOKEN || s.discord_bot_token || '';
     const guildId = s.discord_guild_id || '';
     if (botToken && guildId) {
       try {
-        const r = await fetch(`https://discord.com/api/v10/guilds/${guildId}?with_counts=true`, { headers: { Authorization: `Bot ${botToken}` } });
-        if (r.ok) {
-          const g = await r.json();
-          discordMembers = g.approximate_member_count || discordMembers;
-          await db.run("UPDATE server_settings SET value=? WHERE key='stats_discord_members'", [String(discordMembers)]);
+        const resp = await fetch(`https://discord.com/api/v10/guilds/${guildId}?with_counts=true`, { headers: { Authorization: `Bot ${botToken}` } });
+        if (resp.ok) {
+          const g = await resp.json();
+          discord_members = g.approximate_member_count || discord_members;
+          await db.run("UPDATE server_settings SET value=? WHERE key='stats_discord_members'", [String(discord_members)]);
         }
       } catch (_) {}
     }
-    res.json({ success: true, data: { registered: Number(userCount?.c) || 0, online: Number(s.stats_online) || 0, discord_members: Number(discordMembers) || 0, rating: Number(s.stats_rating) || 5.0 } });
-  } catch (_) {
-    res.json({ success: true, data: { registered: 0, online: 0, discord_members: 0, rating: 5.0 } });
-  }
+  } catch (_) {}
+  res.json({ success: true, data: { registered, online, discord_members, rating } });
 });
 
 // ── FEATURES (public) ────────────────────────────────────────────────────────
