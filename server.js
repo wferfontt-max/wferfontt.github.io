@@ -15,12 +15,24 @@ for (const dir of ['rules', 'forum', 'items', 'avatars']) {
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Session store: use PostgreSQL in production to avoid MemoryStore warning
+let sessionStore;
+if (process.env.DATABASE_URL) {
+  const PgSession = require('connect-pg-simple')(session);
+  sessionStore = new PgSession({
+    conString: process.env.DATABASE_URL,
+    tableName: 'user_sessions',
+    createTableIfMissing: true,
+  });
+}
+
 app.set('trust proxy', 1);
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(session({
+  store: sessionStore,
   secret: process.env.SESSION_SECRET || 'furious-industries-secret-key-2024',
   resave: false,
   saveUninitialized: false,
