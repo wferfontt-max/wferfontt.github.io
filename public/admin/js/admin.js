@@ -285,7 +285,9 @@ async function loadSettings() {
     const { data } = await api('GET', '/api/admin/settings');
     settingsData = {};
     data.forEach(s => settingsData[s.key] = s);
-    const regular   = data.filter(s => !s.key.startsWith('story_') && !s.key.startsWith('feature'));
+    const tbkKeys = ['transbank_environment','transbank_commerce_code','transbank_api_key'];
+    const regular   = data.filter(s => !s.key.startsWith('story_') && !s.key.startsWith('feature') && !tbkKeys.includes(s.key));
+    const tbk       = data.filter(s =>  tbkKeys.includes(s.key));
     const story     = data.filter(s =>  s.key.startsWith('story_'));
     const features  = data.filter(s =>  s.key.startsWith('feature'));
     document.getElementById('settingsGrid').innerHTML =
@@ -296,6 +298,17 @@ async function loadSettings() {
           <input type="${s.key === 'smtp_pass' ? 'password' : 'text'}" id="setting-${s.key}" value="${esc(s.value)}" />
         </div>
       `).join('') +
+      (tbk.length ? `
+        <div class="settings-item" style="grid-column:1/-1;border-top:1px solid rgba(255,255,255,0.08);padding-top:22px;margin-top:12px;">
+          <label style="font-size:1.05rem;color:#facc15">Transbank WebPay Plus</label>
+          <div class="setting-desc">Para pruebas usa <strong>integration</strong> (no requiere credenciales). Para producción cambia a <strong>production</strong> e ingresa el Código de Comercio y API Key entregados por Transbank. La URL de retorno se configura automáticamente usando la <em>URL pública del sitio</em>.</div>
+        </div>` +
+        tbk.map(s => `
+          <div class="settings-item">
+            <label>${esc(s.description || s.key)}</label>
+            <input type="${s.key === 'transbank_api_key' ? 'password' : 'text'}" id="setting-${s.key}" value="${esc(s.value)}" placeholder="${s.key === 'transbank_environment' ? 'integration' : s.key === 'transbank_commerce_code' ? '597055555532' : ''}"/>
+          </div>
+        `).join('') : '') +
       (story.length ? `
         <div class="settings-item" style="grid-column:1/-1;border-top:1px solid rgba(255,255,255,0.08);padding-top:22px;margin-top:12px;">
           <label style="font-size:1.05rem;color:var(--accent)">Historia del Servidor</label>

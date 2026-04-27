@@ -392,45 +392,82 @@ router.get('/me/purchases', requireUser, async (req, res) => {
   res.json({ success: true, data: await db.all('SELECT * FROM purchases WHERE user_id = ? ORDER BY created_at DESC', [req.session.userId]) });
 });
 
+// ── TRANSBANK HELPERS ─────────────────────────────────────────────────────────
+const { WebpayPlus, Options, IntegrationApiKeys, Environment, IntegrationCommerceCodes } = require('transbank-sdk');
+
+async function getWebpayTx() {
+  const envRow = await db.get("SELECT value FROM server_settings WHERE key = 'transbank_environment'");
+  const env = envRow?.value || 'integration';
+  if (env === 'production') {
+    const [codeRow, keyRow] = await Promise.all([
+      db.get("SELECT value FROM server_settings WHERE key = 'transbank_commerce_code'"),
+      db.get("SELECT value FROM server_settings WHERE key = 'transbank_api_key'"),
+    ]);
+    return new WebpayPlus.Transaction(new Options(codeRow?.value, keyRow?.value, Environment.Production));
+  }
+  return new WebpayPlus.Transaction(new Options(
+    IntegrationCommerceCodes.WEBPAY_PLUS,
+    IntegrationApiKeys.WEBPAY,
+    Environment.Integration
+  ));
+}
+
+async function creditDonor(userId, amount, token) {
+  if (!userId) return;
+  try {
+    const user = await db.get('SELECT * FROM users WHERE id = ?', [userId]);
+    if (!user) return;
+    const existing = await db.get('SELECT id FROM donors WHERE user_id = ?', [userId]);
+    if (existing) {
+      await db.run('UPDATE donors SET amount = amount + ?, avatar_url = COALESCE(?, avatar_url) WHERE user_id = ?',
+        [amount, user.avatar_url || null, userId]);
+    } else {
+      await db.run('INSERT INTO donors (username, amount, avatar_url, discord, user_id) VALUES (?, ?, ?, ?, ?)',
+        [user.full_name, amount, user.avatar_url || null, user.discord_username || null, userId]);
+    }
+  } catch (_) {}
+}
+
 // ── STORE BUY ────────────────────────────────────────────────────────────────
 router.post('/store/buy', requireUser, async (req, res) => {
   const { item_id } = req.body;
   const item = await db.get('SELECT * FROM items WHERE id = ? AND is_active = 1', [item_id]);
   if (!item) return res.status(404).json({ error: 'Artículo no encontrado' });
-  const payRow = await db.get("SELECT value FROM server_settings WHERE key = 'store_payment_url'");
-  if (!payRow?.value || payRow.value === '#')
-    return res.status(400).json({ error: 'URL de pago no configurada. Contacta al administrador.' });
-  const buyOrder = `FURI-${Date.now()}-${req.session.userId}`;
+
+  const buyOrder = `FURI${Date.now()}${req.session.userId}`.substring(0, 26);
   await db.run(
     'INSERT INTO purchases (user_id, item_id, item_name, item_price, buy_order, status) VALUES (?, ?, ?, ?, ?, ?)',
     [req.session.userId, item.id, item.name, item.price, buyOrder, 'pending']
   );
-  const returnUrl = `${req.protocol}://${req.get('host')}/tienda/confirmacion?buy_order=${encodeURIComponent(buyOrder)}`;
-  const sep = payRow.value.includes('?') ? '&' : '?';
-  const redirectUrl = `${payRow.value}${sep}amount=${item.price}&buy_order=${encodeURIComponent(buyOrder)}&item=${encodeURIComponent(item.name)}&return_url=${encodeURIComponent(returnUrl)}`;
-  res.json({ success: true, data: { redirect_url: redirectUrl, buy_order: buyOrder } });
+
+  try {
+    const siteRow = await db.get("SELECT value FROM server_settings WHERE key = 'site_url'");
+    const base = siteRow?.value?.replace(/\/$/, '') || `${req.protocol}://${req.get('host')}`;
+    const tx = await getWebpayTx();
+    const tbk = await tx.create(buyOrder, String(req.session.userId), Math.round(item.price), `${base}/api/store/webpay/return`);
+    res.json({ success: true, data: { redirect_url: `${tbk.url}?token_ws=${tbk.token}`, buy_order: buyOrder } });
+  } catch (err) {
+    await db.run("UPDATE purchases SET status = 'failed' WHERE buy_order = ?", [buyOrder]);
+    console.error('Transbank create error:', err.message);
+    res.status(500).json({ error: 'Error al iniciar el pago con Transbank. Intenta de nuevo.' });
+  }
 });
 
 // ── CART CHECKOUT ─────────────────────────────────────────────────────────────
 router.post('/store/cart-buy', requireUser, async (req, res) => {
-  const { items } = req.body; // [{item_id, quantity}]
+  const { items } = req.body;
   if (!items || !Array.isArray(items) || items.length === 0)
     return res.status(400).json({ error: 'El carrito está vacío' });
-
-  const payRow = await db.get("SELECT value FROM server_settings WHERE key = 'store_payment_url'");
-  if (!payRow?.value || payRow.value === '#')
-    return res.status(400).json({ error: 'URL de pago no configurada. Contacta al administrador.' });
 
   const cartItems = [];
   for (const { item_id, quantity = 1 } of items) {
     const item = await db.get('SELECT * FROM items WHERE id = ? AND is_active = 1', [item_id]);
-    if (!item) return res.status(404).json({ error: `Artículo no encontrado` });
+    if (!item) return res.status(404).json({ error: 'Artículo no encontrado' });
     cartItems.push({ ...item, quantity: Math.max(1, parseInt(quantity) || 1) });
   }
 
   const total = cartItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
-  const buyOrder = `CART-${Date.now()}-${req.session.userId}`;
-  const itemSummary = cartItems.map(i => `${i.name}${i.quantity > 1 ? ` x${i.quantity}` : ''}`).join(', ');
+  const buyOrder = `CART${Date.now()}${req.session.userId}`.substring(0, 26);
 
   for (const item of cartItems) {
     await db.run(
@@ -439,54 +476,75 @@ router.post('/store/cart-buy', requireUser, async (req, res) => {
     );
   }
 
-  const returnUrl = `${req.protocol}://${req.get('host')}/tienda/confirmacion?buy_order=${encodeURIComponent(buyOrder)}`;
-  const sep = payRow.value.includes('?') ? '&' : '?';
-  const redirectUrl = `${payRow.value}${sep}amount=${Math.round(total)}&buy_order=${encodeURIComponent(buyOrder)}&item=${encodeURIComponent(itemSummary)}&return_url=${encodeURIComponent(returnUrl)}`;
-  res.json({ success: true, data: { redirect_url: redirectUrl, buy_order: buyOrder, total } });
-});
-
-router.get('/store/confirm', async (req, res) => {
-  const { buy_order, status } = req.query;
-  if (!buy_order) return res.status(400).json({ error: 'buy_order requerido' });
-  const purchase = await db.get('SELECT * FROM purchases WHERE buy_order = ?', [buy_order]);
-  if (!purchase) return res.status(404).json({ error: 'Compra no encontrada' });
-  if (purchase.status === 'pending') {
-    const resolved = (status === 'success' || status === 'AUTHORIZED') ? 'completed' : 'failed';
-    await db.run('UPDATE purchases SET status = ?, completed_at = CURRENT_TIMESTAMP WHERE buy_order = ?', [resolved, buy_order]);
-    purchase.status = resolved;
+  try {
+    const siteRow = await db.get("SELECT value FROM server_settings WHERE key = 'site_url'");
+    const base = siteRow?.value?.replace(/\/$/, '') || `${req.protocol}://${req.get('host')}`;
+    const tx = await getWebpayTx();
+    const tbk = await tx.create(buyOrder, String(req.session.userId), Math.round(total), `${base}/api/store/webpay/return`);
+    res.json({ success: true, data: { redirect_url: `${tbk.url}?token_ws=${tbk.token}`, buy_order: buyOrder, total } });
+  } catch (err) {
+    await db.run("UPDATE purchases SET status = 'failed' WHERE buy_order = ?", [buyOrder]);
+    console.error('Transbank cart error:', err.message);
+    res.status(500).json({ error: 'Error al iniciar el pago con Transbank. Intenta de nuevo.' });
   }
-  res.json({ success: true, data: purchase });
 });
 
-router.post('/store/confirm', async (req, res) => {
-  const { buy_order, token_ws, TBK_TOKEN } = req.body;
-  if (!buy_order && !token_ws && !TBK_TOKEN) return res.status(400).json({ error: 'Parámetros requeridos' });
-  const bo = buy_order || '';
-  const purchase = await db.get('SELECT * FROM purchases WHERE buy_order = ?', [bo]);
-  if (!purchase) return res.status(404).json({ error: 'Compra no encontrada' });
-  const resolved = TBK_TOKEN ? 'failed' : 'completed';
-  if (purchase.status === 'pending') {
-    await db.run(
-      'UPDATE purchases SET status = ?, webpay_token = ?, completed_at = CURRENT_TIMESTAMP WHERE buy_order = ?',
-      [resolved, token_ws || TBK_TOKEN || null, bo]
-    );
-    if (resolved === 'completed') {
-      try {
-        const user = await db.get('SELECT * FROM users WHERE id = ?', [purchase.user_id]);
-        if (user) {
-          const existing = await db.get('SELECT * FROM donors WHERE user_id = ?', [purchase.user_id]);
-          if (existing) {
-            await db.run('UPDATE donors SET amount = amount + ?, avatar_url = COALESCE(?, avatar_url) WHERE user_id = ?',
-              [purchase.item_price, user.avatar_url || null, purchase.user_id]);
-          } else {
-            await db.run('INSERT INTO donors (username, amount, avatar_url, discord, user_id) VALUES (?, ?, ?, ?, ?)',
-              [user.full_name, purchase.item_price, user.avatar_url || null, user.discord_username || null, user.id]);
-          }
-        }
-      } catch (_) {}
+// ── WEBPAY RETURN (Transbank POST back after payment) ─────────────────────────
+router.post('/store/webpay/return', async (req, res) => {
+  const token_ws  = req.body.token_ws;
+  const TBK_TOKEN = req.body.TBK_TOKEN;
+  const TBK_ORDER = req.body.TBK_ORDEN_COMPRA;
+
+  // Cancelled by user or timeout (TBK_TOKEN present, no valid token_ws)
+  if (TBK_TOKEN) {
+    if (TBK_ORDER) {
+      await db.run(
+        "UPDATE purchases SET status='failed', webpay_token=? WHERE buy_order=? AND status='pending'",
+        [TBK_TOKEN, TBK_ORDER]
+      ).catch(() => {});
     }
+    return res.redirect('/tienda/confirmacion?result=cancelled');
   }
-  res.json({ success: true, data: { ...purchase, status: resolved } });
+
+  if (!token_ws) return res.redirect('/tienda/confirmacion?result=error');
+
+  try {
+    const tx = await getWebpayTx();
+    const resp = await tx.commit(token_ws);
+
+    if (resp.status === 'AUTHORIZED') {
+      const purchases = await db.all('SELECT * FROM purchases WHERE buy_order = ?', [resp.buy_order]);
+      await db.run(
+        "UPDATE purchases SET status='completed', webpay_token=?, completed_at=CURRENT_TIMESTAMP WHERE buy_order=? AND status='pending'",
+        [token_ws, resp.buy_order]
+      );
+      const totalPaid = purchases.reduce((s, p) => s + parseFloat(p.item_price || 0), 0);
+      const userId = purchases[0]?.user_id;
+      if (userId) await creditDonor(userId, totalPaid, token_ws);
+      return res.redirect(`/tienda/confirmacion?buy_order=${encodeURIComponent(resp.buy_order)}&result=success`);
+    } else {
+      await db.run(
+        "UPDATE purchases SET status='failed', webpay_token=? WHERE buy_order=? AND status='pending'",
+        [token_ws, resp.buy_order]
+      );
+      return res.redirect(`/tienda/confirmacion?buy_order=${encodeURIComponent(resp.buy_order)}&result=failed`);
+    }
+  } catch (err) {
+    console.error('Transbank commit error:', err.message);
+    return res.redirect('/tienda/confirmacion?result=error');
+  }
+});
+
+// ── STORE STATUS ──────────────────────────────────────────────────────────────
+router.get('/store/status', requireUser, async (req, res) => {
+  const { buy_order } = req.query;
+  if (!buy_order) return res.status(400).json({ error: 'buy_order requerido' });
+  const purchases = await db.all(
+    'SELECT * FROM purchases WHERE buy_order = ? AND user_id = ? ORDER BY created_at ASC',
+    [buy_order, req.session.userId]
+  );
+  if (!purchases.length) return res.status(404).json({ error: 'Compra no encontrada' });
+  res.json({ success: true, data: purchases });
 });
 
 module.exports = router;

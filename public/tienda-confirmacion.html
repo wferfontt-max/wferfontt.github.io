@@ -60,63 +60,25 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', async () => {
-  const nav = document.getElementById('navbar');
-  window.addEventListener('scroll', () => nav.classList.toggle('scrolled', window.scrollY > 50), { passive: true });
-  document.getElementById('mobileToggle').addEventListener('click', () => document.getElementById('navLinks').classList.toggle('open'));
-  fetch('/api/stats').then(r => r.json()).then(({ data }) => { const d = document.getElementById('navDiscord'); if (d && data.discord_url) d.href = data.discord_url; }).catch(() => {});
+function esc(s) { return s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : ''; }
 
-  const params = new URLSearchParams(location.search);
-  const buyOrder = params.get('buy_order');
-  // WebPay returns token_ws on success, TBK_TOKEN on cancellation
-  const tokenWs   = params.get('token_ws');
-  const tbkToken  = params.get('TBK_TOKEN');
-  const card = document.getElementById('confirmCard');
+function fmtPrice(v) { return '$' + parseFloat(v || 0).toLocaleString('es-CL'); }
 
-  if (!buyOrder) {
-    renderResult(card, 'error', '¿Llegaste aquí por error?', 'No se encontró ninguna orden de compra.', null);
-    return;
-  }
-
-  try {
-    // POST confirmation to server
-    const body = { buy_order: buyOrder };
-    if (tokenWs)  body.token_ws  = tokenWs;
-    if (tbkToken) body.TBK_TOKEN = tbkToken;
-    const r = await fetch('/api/store/confirm', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
-    });
-    const { data } = await r.json();
-
-    if (!r.ok) { renderResult(card, 'error', 'Compra no encontrada', 'No pudimos verificar tu transacción.', null); return; }
-
-    if (data.status === 'completed') {
-      renderResult(card, 'success', '¡Pago Confirmado!',
-        'Tu compra fue procesada exitosamente. Los beneficios serán aplicados en el servidor.',
-        data);
-    } else if (data.status === 'failed' || tbkToken) {
-      renderResult(card, 'error', 'Pago No Completado',
-        'El pago fue cancelado o rechazado. Puedes intentarlo de nuevo.',
-        data);
-    } else {
-      renderResult(card, 'pending', 'Pago en Proceso',
-        'Tu pago está siendo procesado. Revisa tu historial de compras en unos minutos.',
-        data);
-    }
-  } catch (_) {
-    renderResult(card, 'error', 'Error de conexión', 'No pudimos conectar con el servidor. Intenta de nuevo.', null);
-  }
-});
-
-function renderResult(card, type, title, msg, data) {
-  const icons = { success: '✅', error: '❌', pending: '⏳' };
+function renderResult(card, type, title, msg, purchases) {
+  const icons = { success: '✅', error: '❌', pending: '⏳', cancelled: '🚫' };
   let detailHtml = '';
-  if (data) {
+  if (purchases && purchases.length) {
+    const total = purchases.reduce((s, p) => s + parseFloat(p.item_price || 0), 0);
+    const rows = purchases.map(p =>
+      `<div class="confirm-detail-row"><span class="confirm-detail-label">${esc(p.item_name)}</span><span class="confirm-detail-value">${fmtPrice(p.item_price)}</span></div>`
+    ).join('');
+    const statusColor = type === 'success' ? 'green' : type === 'error' || type === 'cancelled' ? 'red' : 'yellow';
+    const statusLabel = type === 'success' ? 'Aprobado' : type === 'cancelled' ? 'Cancelado' : 'Rechazado';
     detailHtml = `<div class="confirm-detail">
-      <div class="confirm-detail-row"><span class="confirm-detail-label">Artículo</span><span class="confirm-detail-value">${esc(data.item_name)}</span></div>
-      <div class="confirm-detail-row"><span class="confirm-detail-label">Monto</span><span class="confirm-detail-value">$${parseFloat(data.item_price).toFixed(2)}</span></div>
-      <div class="confirm-detail-row"><span class="confirm-detail-label">Orden</span><span class="confirm-detail-value" style="font-size:.75rem;word-break:break-all">${esc(data.buy_order)}</span></div>
-      <div class="confirm-detail-row"><span class="confirm-detail-label">Estado</span><span class="confirm-detail-value ${type === 'success' ? 'green' : type === 'error' ? 'red' : 'yellow'}">${type === 'success' ? 'Completada' : type === 'error' ? 'Fallida' : 'Pendiente'}</span></div>
+      ${rows}
+      ${purchases.length > 1 ? `<div class="confirm-detail-row" style="border-top:1px solid #2a2a3e;margin-top:4px;padding-top:8px;"><span class="confirm-detail-label" style="font-weight:600">Total</span><span class="confirm-detail-value" style="color:#00c4cc">${fmtPrice(total)}</span></div>` : ''}
+      <div class="confirm-detail-row"><span class="confirm-detail-label">Orden</span><span class="confirm-detail-value" style="font-size:.72rem;word-break:break-all">${esc(purchases[0].buy_order)}</span></div>
+      <div class="confirm-detail-row"><span class="confirm-detail-label">Estado</span><span class="confirm-detail-value ${statusColor}">${statusLabel}</span></div>
     </div>`;
   }
   card.innerHTML = `
@@ -130,7 +92,43 @@ function renderResult(card, type, title, msg, data) {
     </div>`;
 }
 
-function esc(s) { return s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : ''; }
+document.addEventListener('DOMContentLoaded', async () => {
+  const nav = document.getElementById('navbar');
+  window.addEventListener('scroll', () => nav.classList.toggle('scrolled', window.scrollY > 50), { passive: true });
+  document.getElementById('mobileToggle').addEventListener('click', () => document.getElementById('navLinks').classList.toggle('open'));
+  fetch('/api/stats').then(r => r.json()).then(({ data }) => { const d = document.getElementById('navDiscord'); if (d && data.discord_url) d.href = data.discord_url; }).catch(() => {});
+
+  const params  = new URLSearchParams(location.search);
+  const result  = params.get('result');   // success | failed | cancelled | error
+  const buyOrder = params.get('buy_order');
+  const card    = document.getElementById('confirmCard');
+
+  // Determine result type from param
+  const typeMap = { success: 'success', failed: 'error', cancelled: 'cancelled', error: 'error' };
+  const type = typeMap[result] || 'error';
+
+  const messages = {
+    success:   ['¡Pago Aprobado!',       'Tu compra fue procesada exitosamente por Transbank. Los beneficios serán aplicados en el servidor.'],
+    failed:    ['Pago Rechazado',         'Tu transacción fue rechazada por Transbank. Verifica tu saldo o intenta con otra tarjeta.'],
+    cancelled: ['Pago Cancelado',         'Cancelaste el proceso de pago. Puedes intentarlo nuevamente cuando quieras.'],
+    error:     ['Error en la Transacción','Ocurrió un error inesperado. Si realizaste un pago, contacta al administrador.'],
+  };
+  const [title, msg] = messages[result] || messages.error;
+
+  // If we have a buy_order, fetch the purchase details from the server
+  if (buyOrder && result === 'success') {
+    try {
+      const r = await fetch(`/api/store/status?buy_order=${encodeURIComponent(buyOrder)}`);
+      if (r.ok) {
+        const { data } = await r.json();
+        renderResult(card, type, title, msg, data);
+        return;
+      }
+    } catch (_) {}
+  }
+
+  renderResult(card, type, title, msg, null);
+});
 </script>
 <script src="/js/user-nav.js"></script>
 </body>

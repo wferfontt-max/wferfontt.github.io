@@ -336,6 +336,9 @@ async function initDatabase() {
     ['feature_6_icon', '🎭', 'Característica 6: Ícono (emoji)'],
     ['feature_6_title', 'Eventos Especiales', 'Característica 6: Título'],
     ['feature_6_desc', 'Eventos temáticos regulares con recompensas exclusivas y experiencias únicas creadas por el staff.', 'Característica 6: Descripción'],
+    ['transbank_environment', 'integration', 'Transbank: Ambiente (integration = pruebas / production = real)'],
+    ['transbank_commerce_code', '', 'Transbank: Código de Comercio (solo producción)'],
+    ['transbank_api_key', '', 'Transbank: API Key Secret (solo producción)'],
   ];
   const insSettingSQL = db.isPg
     ? 'INSERT INTO server_settings (key, value, description) VALUES (?, ?, ?) ON CONFLICT (key) DO NOTHING'
