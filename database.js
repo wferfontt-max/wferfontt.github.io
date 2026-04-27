@@ -37,6 +37,8 @@ async function initDatabase() {
       category TEXT DEFAULT 'general',
       is_published INTEGER DEFAULT 1,
       views INTEGER DEFAULT 0,
+      image_url TEXT,
+      video_url TEXT,
       ${TS('created_at')},
       ${TS('updated_at')}
     );
@@ -234,6 +236,14 @@ async function initDatabase() {
       console.error('   Detail:', err.message);
       throw err;
     }
+  }
+
+  // ── Migrations: add columns that may not exist in older deployments ─────────
+  for (const [table, col, def] of [
+    ['news', 'image_url', 'TEXT'],
+    ['news', 'video_url', 'TEXT'],
+  ]) {
+    try { await db.exec(`ALTER TABLE ${table} ADD COLUMN ${col} ${def}`); } catch (_) {}
   }
 
   // ── Unique indexes for Discord fields (partial: multiple NULLs allowed) ────

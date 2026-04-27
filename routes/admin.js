@@ -68,28 +68,43 @@ router.get('/stats', async (req, res) => {
   });
 });
 
+const newsImgUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 8 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    ['.jpg','.jpeg','.png','.gif','.webp'].includes(path.extname(file.originalname).toLowerCase())
+      ? cb(null, true) : cb(new Error('Solo imágenes'));
+  },
+});
+
 // ── NEWS ──────────────────────────────────────────────────────────────────────
 router.get('/news', async (req, res) => {
   res.json({ success: true, data: await db.all('SELECT * FROM news ORDER BY created_at DESC') });
 });
 
-router.post('/news', async (req, res) => {
-  const { title, content, excerpt, category, is_published } = req.body;
+router.post('/news', newsImgUpload.single('image'), async (req, res) => {
+  const { title, content, excerpt, category, is_published, video_url } = req.body;
   if (!title || !content) return res.status(400).json({ error: 'Título y contenido son requeridos' });
+  const image_url = req.file ? `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}` : (req.body.image_url || null);
   const r = await db.run(
-    'INSERT INTO news (title, content, excerpt, author, category, is_published) VALUES (?, ?, ?, ?, ?, ?)',
-    [title, content, excerpt || content.substring(0, 150) + '...', req.session.adminUsername, category || 'general', is_published ? 1 : 0]
+    'INSERT INTO news (title, content, excerpt, author, category, is_published, image_url, video_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+    [title, content, excerpt || content.substring(0, 150) + '...', req.session.adminUsername, category || 'general', is_published ? 1 : 0, image_url, video_url || null]
   );
   log(req, 'CREATE_NEWS', 'news', r.lastInsertRowid, `Creó noticia: ${title}`);
   res.json({ success: true, data: { id: r.lastInsertRowid }, message: 'Noticia creada' });
 });
 
-router.put('/news/:id', async (req, res) => {
-  const { title, content, excerpt, category, is_published } = req.body;
+router.put('/news/:id', newsImgUpload.single('image'), async (req, res) => {
+  const { title, content, excerpt, category, is_published, video_url, remove_image } = req.body;
   if (!title || !content) return res.status(400).json({ error: 'Título y contenido son requeridos' });
+  const current = await db.get('SELECT image_url FROM news WHERE id = ?', [req.params.id]);
+  let image_url = current?.image_url || null;
+  if (remove_image === 'true') image_url = null;
+  if (req.file) image_url = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+  else if (req.body.image_url !== undefined) image_url = req.body.image_url || null;
   await db.run(
-    'UPDATE news SET title=?, content=?, excerpt=?, category=?, is_published=?, updated_at=CURRENT_TIMESTAMP WHERE id=?',
-    [title, content, excerpt || content.substring(0, 150) + '...', category || 'general', is_published ? 1 : 0, req.params.id]
+    'UPDATE news SET title=?, content=?, excerpt=?, category=?, is_published=?, image_url=?, video_url=?, updated_at=CURRENT_TIMESTAMP WHERE id=?',
+    [title, content, excerpt || content.substring(0, 150) + '...', category || 'general', is_published ? 1 : 0, image_url, video_url || null, req.params.id]
   );
   log(req, 'UPDATE_NEWS', 'news', req.params.id, `Actualizó noticia: ${title}`);
   res.json({ success: true, message: 'Noticia actualizada' });

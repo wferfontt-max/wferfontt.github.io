@@ -503,6 +503,17 @@ const formTemplates = {
       </select></div>
       <div class="form-group" style="display:flex;align-items:flex-end;padding-bottom:4px;"><label class="checkbox-label"><input type="checkbox" id="f-published" ${data?.is_published!==0?'checked':''} /> Publicar inmediatamente</label></div>
     </div>
+    <div class="form-group">
+      <label>Imagen de portada</label>
+      ${data?.image_url ? `<div style="margin-bottom:6px;"><img src="${esc(data.image_url)}" style="height:80px;border-radius:6px;object-fit:cover;background:var(--card2);padding:2px;" />&nbsp;<label class="checkbox-label" style="display:inline-flex;gap:4px;"><input type="checkbox" id="f-remove_image"> Eliminar imagen</label></div>` : ''}
+      <input type="file" id="f-image" accept="image/*" style="color:var(--text)" />
+      <small style="color:var(--muted)">JPG, PNG, GIF, WebP. Máx 8 MB. Se mostrará como banner en inicio.</small>
+    </div>
+    <div class="form-group">
+      <label>Video (YouTube embed URL)</label>
+      <input type="text" id="f-video_url" value="${esc(data?.video_url||'')}" placeholder="https://www.youtube.com/embed/..." />
+      <small style="color:var(--muted)">Pega la URL de embed de YouTube (youtube.com/embed/ID).</small>
+    </div>
   `,
   players: (data) => `
     <div class="form-row">
@@ -714,7 +725,26 @@ async function saveModal() {
     let body = {};
     const e = modalEntity;
 
-    if (e === 'news') body = { title: getFieldVal('f-title'), content: getFieldVal('f-content'), excerpt: getFieldVal('f-excerpt'), category: getFieldVal('f-category'), is_published: getFieldVal('f-published') };
+    if (e === 'news') {
+      const fd = new FormData();
+      fd.append('title', getFieldVal('f-title') || '');
+      fd.append('content', getFieldVal('f-content') || '');
+      fd.append('excerpt', getFieldVal('f-excerpt') || '');
+      fd.append('category', getFieldVal('f-category') || 'general');
+      fd.append('is_published', getFieldVal('f-published') ? '1' : '0');
+      fd.append('video_url', getFieldVal('f-video_url') || '');
+      if (hasField('f-remove_image') && document.getElementById('f-remove_image').checked) fd.append('remove_image', 'true');
+      const fi = document.getElementById('f-image');
+      if (fi?.files?.[0]) fd.append('image', fi.files[0]);
+      const nUrl = '/api/admin/news' + (modalMode === 'edit' ? `/${editingId}` : '');
+      const nResp = await fetch(nUrl, { method: modalMode === 'edit' ? 'PUT' : 'POST', body: fd, credentials: 'same-origin' });
+      if (!nResp.ok) { const err = await nResp.json().catch(() => ({})); throw new Error(err.error || 'Error al guardar'); }
+      const nResult = await nResp.json();
+      showToast(nResult.message || 'Guardado exitosamente', 'success');
+      closeMainModal();
+      await loadPage(currentPage);
+      return;
+    }
     else if (e === 'players') body = { username: getFieldVal('f-username'), email: getFieldVal('f-email'), steam_id: getFieldVal('f-steam_id'), discord_id: getFieldVal('f-discord_id'), status: getFieldVal('f-status'), whitelist_status: getFieldVal('f-whitelist_status'), total_hours: parseFloat(getFieldVal('f-total_hours')||0), warnings: parseInt(getFieldVal('f-warnings')||0), ban_reason: getFieldVal('f-ban_reason') };
     else if (e === 'characters') body = { name: getFieldVal('f-name'), player_id: getFieldVal('f-player_id'), age: parseInt(getFieldVal('f-age')||0)||null, nationality: getFieldVal('f-nationality'), faction_id: getFieldVal('f-faction_id')||null, occupation: getFieldVal('f-occupation'), backstory: getFieldVal('f-backstory'), status: hasField('f-status') ? getFieldVal('f-status') : 'active' };
     else if (e === 'factions') body = { name: getFieldVal('f-name'), short_name: getFieldVal('f-short_name'), description: getFieldVal('f-description'), color: getFieldVal('f-color'), type: getFieldVal('f-type'), leader: getFieldVal('f-leader'), member_count: parseInt(getFieldVal('f-member_count')||0), is_recruiting: getFieldVal('f-is_recruiting'), is_active: hasField('f-is_active') ? getFieldVal('f-is_active') : true };

@@ -4,29 +4,21 @@ const path = require('path');
 const multer = require('multer');
 const db = require('../db');
 
-const forumDir = path.join(__dirname, '..', 'public', 'uploads', 'forum');
+const imgFilter = (req, file, cb) => {
+  ['.jpg','.jpeg','.png','.gif','.webp'].includes(path.extname(file.originalname).toLowerCase())
+    ? cb(null, true) : cb(new Error('Solo imágenes'));
+};
+
 const forumUpload = multer({
-  storage: multer.diskStorage({
-    destination: (req, file, cb) => cb(null, forumDir),
-    filename: (req, file, cb) => cb(null, `forum_${Date.now()}${path.extname(file.originalname)}`),
-  }),
+  storage: multer.memoryStorage(),
   limits: { fileSize: 8 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    ['.jpg','.jpeg','.png','.gif','.webp'].includes(path.extname(file.originalname).toLowerCase())
-      ? cb(null, true) : cb(new Error('Solo imágenes'));
-  },
+  fileFilter: imgFilter,
 });
 
 const avatarUpload = multer({
-  storage: multer.diskStorage({
-    destination: (req, file, cb) => cb(null, path.join(__dirname, '..', 'public', 'uploads', 'avatars')),
-    filename: (req, file, cb) => cb(null, `avatar_${req.session.userId}_${Date.now()}${path.extname(file.originalname)}`),
-  }),
+  storage: multer.memoryStorage(),
   limits: { fileSize: 4 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    ['.jpg','.jpeg','.png','.gif','.webp'].includes(path.extname(file.originalname).toLowerCase())
-      ? cb(null, true) : cb(new Error('Solo imágenes'));
-  },
+  fileFilter: imgFilter,
 });
 
 function requireUser(req, res, next) {
@@ -38,7 +30,7 @@ function requireUser(req, res, next) {
 router.get('/news', async (req, res) => {
   const limit = parseInt(req.query.limit) || 10;
   const category = req.query.category;
-  let sql = 'SELECT id, title, excerpt, author, category, views, created_at FROM news WHERE is_published = 1';
+  let sql = 'SELECT id, title, excerpt, author, category, image_url, video_url, views, created_at FROM news WHERE is_published = 1';
   const params = [];
   if (category && category !== 'all') { sql += ' AND category = ?'; params.push(category); }
   sql += ' ORDER BY created_at DESC LIMIT ?';
@@ -216,7 +208,7 @@ router.post('/forum/posts', requireUser, forumUpload.single('image'), async (req
   const { title, content, category } = req.body;
   if (!title) return res.status(400).json({ error: 'Título es requerido' });
   const user = await db.get('SELECT full_name, avatar_url FROM users WHERE id = ?', [req.session.userId]);
-  const image_url = req.file ? `/uploads/forum/${req.file.filename}` : null;
+  const image_url = req.file ? `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}` : null;
   const r = await db.run(
     'INSERT INTO forum_posts (author_name, author_avatar, title, content, image_url, category) VALUES (?, ?, ?, ?, ?, ?)',
     [user?.full_name || 'Usuario', user?.avatar_url || null, title, content || null, image_url, category || 'general']
@@ -391,9 +383,9 @@ router.put('/me', requireUser, async (req, res) => {
 
 router.post('/me/avatar', requireUser, avatarUpload.single('avatar'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No se subió ninguna imagen' });
-  const url = `/uploads/avatars/${req.file.filename}`;
-  await db.run('UPDATE users SET avatar_url = ? WHERE id = ?', [url, req.session.userId]);
-  res.json({ success: true, data: { avatar_url: url } });
+  const dataUri = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+  await db.run('UPDATE users SET avatar_url = ? WHERE id = ?', [dataUri, req.session.userId]);
+  res.json({ success: true, data: { avatar_url: dataUri } });
 });
 
 router.get('/me/purchases', requireUser, async (req, res) => {
