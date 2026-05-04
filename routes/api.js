@@ -90,6 +90,17 @@ router.get('/stats', async (req, res) => {
     if (s.discord_url) discord_url = s.discord_url;
     if (s.server_ip) server_ip = s.server_ip;
     if (s.server_port) server_port = s.server_port;
+
+    // Jugadores en línea desde FiveM en tiempo real
+    try {
+      const fivemResp = await fetch(`http://${server_ip}:${server_port}/players.json`, { signal: AbortSignal.timeout(3000) });
+      if (fivemResp.ok) {
+        const players = await fivemResp.json();
+        online = Array.isArray(players) ? players.length : 0;
+        await db.run("UPDATE server_settings SET value=? WHERE key='stats_online'", [String(online)]);
+      }
+    } catch (_) { /* servidor offline — usa último valor de la BD */ }
+
     const botToken = process.env.DISCORD_BOT_TOKEN || s.discord_bot_token || '';
     const guildId = s.discord_guild_id || '';
     if (botToken && guildId) {
