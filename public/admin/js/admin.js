@@ -980,19 +980,27 @@ async function loadCompras() {
     const statusBadge = s => s === 'completed' ? 'badge-success' : s === 'failed' ? 'badge-danger' : 'badge-warning';
     const statusLabel = s => s === 'completed' ? 'Completada' : s === 'failed' ? 'Fallida' : 'Pendiente';
     document.getElementById('comprasTable').innerHTML = data.length
-      ? data.map(p => `
+      ? data.map(p => {
+          const tokenLabel = p.status === 'completed' ? 'Aprobación' : p.status === 'failed' ? (p.webpay_token?.length > 50 ? 'Rechazo' : 'Anulación') : null;
+          const tokenCell = p.webpay_token
+            ? `<div style="font-size:.65rem;color:var(--muted);margin-top:4px;">${tokenLabel ? `<span style="color:#facc15">${tokenLabel}:</span> ` : ''}
+               <span style="font-family:monospace;word-break:break-all;">${esc(p.webpay_token.substring(0,24))}…</span>
+               <button style="background:none;border:1px solid rgba(0,196,204,.3);border-radius:3px;color:var(--primary);font-size:.62rem;padding:1px 6px;cursor:pointer;margin-left:4px;"
+                 onclick="navigator.clipboard.writeText('${esc(p.webpay_token)}').then(()=>{this.textContent='✓';setTimeout(()=>this.textContent='copiar',1200)})" >copiar</button></div>`
+            : '<div style="font-size:.65rem;color:var(--muted);margin-top:4px;">Sin token</div>';
+          return `
         <tr data-item_name="${esc(p.item_name)}" data-full_name="${esc(p.full_name||'')}" data-buy_order="${esc(p.buy_order||'')}">
           <td><strong style="color:var(--text-bright)">${esc(p.item_name)}</strong></td>
           <td><div style="font-size:.85rem">${esc(p.full_name||'—')}</div><div style="font-size:.72rem;color:var(--muted)">${esc(p.email||'')}</div></td>
           <td style="color:var(--primary);font-weight:700">$${parseFloat(p.item_price).toFixed(2)}</td>
-          <td style="font-size:.72rem;color:var(--muted);word-break:break-all;max-width:180px">${esc(p.buy_order||'—')}</td>
+          <td style="font-size:.72rem;color:var(--muted);word-break:break-all;max-width:180px">${esc(p.buy_order||'—')}${tokenCell}</td>
           <td><span class="badge ${statusBadge(p.status)}">${statusLabel(p.status)}</span></td>
           <td style="font-size:.75rem;color:var(--muted)">${fmtDate(p.created_at)}</td>
           <td><div class="td-actions" style="flex-wrap:wrap;gap:4px;">
             ${p.status !== 'completed' ? `<button class="btn-edit" onclick="updatePurchaseStatus(${p.id},'completed')">✓ Confirmar</button>` : ''}
             ${p.status === 'pending' ? `<button class="btn-delete" onclick="updatePurchaseStatus(${p.id},'failed')">✗ Rechazar</button>` : ''}
           </div></td>
-        </tr>`).join('')
+        </tr>`;}).join('')
       : '<tr><td colspan="7" class="empty-state"><span class="empty-icon">💳</span>Sin compras registradas</td></tr>';
   } catch (e) { showToast(e.message, 'error'); }
 }

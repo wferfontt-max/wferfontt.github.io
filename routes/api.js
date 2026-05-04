@@ -524,7 +524,8 @@ async function handleWebpayReturn(req, res) {
         [TBK_TOKEN, TBK_ORDER]
       ).catch(() => {});
     }
-    return res.redirect('/tienda/confirmacion?result=cancelled');
+    const cq = TBK_ORDER ? `&buy_order=${encodeURIComponent(TBK_ORDER)}` : '';
+    return res.redirect(`/tienda/confirmacion?result=cancelled${cq}`);
   }
 
   if (!token_ws) return res.redirect('/tienda/confirmacion?result=error');
