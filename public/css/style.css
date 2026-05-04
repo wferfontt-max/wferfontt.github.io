@@ -262,6 +262,26 @@ section { padding: 100px 0; }
 .stat-label { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
 .stat-rating { color: var(--secondary); }
 @media (max-width: 640px) { .stats-bar { flex-wrap: wrap; } .stat-item { flex: 1 1 50%; border-bottom: 1px solid var(--border); } }
+.normativa-banner {
+  display: flex; align-items: center; justify-content: space-between; gap: 24px;
+  background: var(--bg-card); border: 1px solid var(--border-hover);
+  border-left: 4px solid var(--primary); border-radius: 8px;
+  padding: 24px 32px; margin-bottom: 48px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.3), 0 0 16px var(--primary-glow-sm);
+}
+.normativa-content { display: flex; align-items: center; gap: 20px; }
+.normativa-icon { font-size: 2.4rem; flex-shrink: 0; }
+.normativa-text h3 { font-family: 'Rajdhani', sans-serif; font-size: 1.2rem; font-weight: 700; color: var(--text-bright); margin-bottom: 4px; }
+.normativa-text p { font-size: 0.88rem; color: var(--muted); line-height: 1.5; }
+.normativa-btn {
+  display: inline-flex; align-items: center; gap: 10px; flex-shrink: 0;
+  padding: 12px 24px; background: var(--primary); color: var(--bg);
+  font-family: 'Rajdhani', sans-serif; font-size: 0.85rem; font-weight: 700;
+  letter-spacing: 0.08em; text-decoration: none; border-radius: 6px;
+  transition: all 0.3s; white-space: nowrap;
+}
+.normativa-btn:hover { background: var(--primary-light, var(--primary)); box-shadow: 0 0 20px var(--primary-glow-sm); transform: translateY(-2px); }
+@media (max-width: 640px) { .normativa-banner { flex-direction: column; text-align: center; } .normativa-content { flex-direction: column; } }
 .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
 .feature-card {
   padding: 32px; background: var(--bg-card); border: 1px solid var(--border);
