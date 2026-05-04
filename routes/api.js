@@ -508,13 +508,15 @@ router.post('/store/cart-buy', requireUser, async (req, res) => {
   }
 });
 
-// ── WEBPAY RETURN (Transbank POST back after payment) ─────────────────────────
-router.post('/store/webpay/return', async (req, res) => {
-  const token_ws  = req.body.token_ws;
-  const TBK_TOKEN = req.body.TBK_TOKEN;
-  const TBK_ORDER = req.body.TBK_ORDEN_COMPRA;
+// ── WEBPAY RETURN (Transbank POST o GET back after payment) ──────────────────
+async function handleWebpayReturn(req, res) {
+  // Soporta tanto POST (cuerpo form) como GET (query string) — integración usa GET
+  const body      = req.method === 'GET' ? req.query : req.body;
+  const token_ws  = body.token_ws;
+  const TBK_TOKEN = body.TBK_TOKEN;
+  const TBK_ORDER = body.TBK_ORDEN_COMPRA;
 
-  // Cancelled by user or timeout (TBK_TOKEN present, no valid token_ws)
+  // Cancelado por el usuario o timeout
   if (TBK_TOKEN) {
     if (TBK_ORDER) {
       await db.run(
@@ -552,7 +554,10 @@ router.post('/store/webpay/return', async (req, res) => {
     console.error('Transbank commit error:', err.message);
     return res.redirect('/tienda/confirmacion?result=error');
   }
-});
+}
+
+router.post('/store/webpay/return', handleWebpayReturn);
+router.get('/store/webpay/return',  handleWebpayReturn);
 
 // ── STORE STATUS ──────────────────────────────────────────────────────────────
 router.get('/store/status', requireUser, async (req, res) => {
