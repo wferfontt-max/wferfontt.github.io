@@ -418,9 +418,10 @@ async function getWebpayTx() {
     return new WebpayPlus.Transaction(new Options(code, key, Environment.Production));
   }
 
-  // Integration: prefer DB-configured codes so el panel admin sincroniza correctamente
-  const code = s.transbank_commerce_code || IntegrationCommerceCodes.WEBPAY_PLUS;
-  const key  = s.transbank_api_key       || IntegrationApiKeys.WEBPAY;
+  // Integration: solo usar credenciales de la BD si están configuradas ambas; mezclar una sola da 401
+  const hasCustom = s.transbank_commerce_code && s.transbank_api_key;
+  const code = hasCustom ? s.transbank_commerce_code : IntegrationCommerceCodes.WEBPAY_PLUS;
+  const key  = hasCustom ? s.transbank_api_key       : IntegrationApiKeys.WEBPAY;
   return new WebpayPlus.Transaction(new Options(code, key, Environment.Integration));
 }
 
