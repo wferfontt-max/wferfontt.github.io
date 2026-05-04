@@ -2,6 +2,18 @@
 (async function () {
   function esc(s) { return s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : ''; }
 
+  // Inject Normativa link after "Noticias" if not already present
+  if (!document.querySelector('a[href="/normativa.pdf"]')) {
+    const noticiasLink = document.querySelector('a[href="/noticias"]');
+    if (noticiasLink) {
+      const norm = document.createElement('a');
+      norm.href = '/normativa.pdf';
+      norm.download = 'Normativa - Furious Industries RP.pdf';
+      norm.textContent = 'Normativa';
+      noticiasLink.parentNode.insertBefore(norm, noticiasLink.nextSibling);
+    }
+  }
+
   let user = null;
   try {
     const r = await fetch('/api/me');

@@ -395,21 +395,33 @@ router.get('/me/purchases', requireUser, async (req, res) => {
 // ── TRANSBANK HELPERS ─────────────────────────────────────────────────────────
 const { WebpayPlus, Options, IntegrationApiKeys, Environment, IntegrationCommerceCodes } = require('transbank-sdk');
 
-async function getWebpayTx() {
-  const envRow = await db.get("SELECT value FROM server_settings WHERE key = 'transbank_environment'");
-  const env = envRow?.value || 'integration';
-  if (env === 'production') {
-    const [codeRow, keyRow] = await Promise.all([
-      db.get("SELECT value FROM server_settings WHERE key = 'transbank_commerce_code'"),
-      db.get("SELECT value FROM server_settings WHERE key = 'transbank_api_key'"),
-    ]);
-    return new WebpayPlus.Transaction(new Options(codeRow?.value, keyRow?.value, Environment.Production));
+function getBaseUrl(req, siteUrl) {
+  const url = siteUrl?.replace(/\/$/, '') || '';
+  // If site_url is localhost or empty, use the actual request host (Railway URL)
+  if (!url || url.includes('localhost') || url.includes('127.0.0.1')) {
+    return `${req.protocol}://${req.get('host')}`;
   }
-  return new WebpayPlus.Transaction(new Options(
-    IntegrationCommerceCodes.WEBPAY_PLUS,
-    IntegrationApiKeys.WEBPAY,
-    Environment.Integration
-  ));
+  return url;
+}
+
+async function getWebpayTx() {
+  const rows = await db.all(
+    "SELECT key, value FROM server_settings WHERE key IN ('transbank_environment','transbank_commerce_code','transbank_api_key')"
+  );
+  const s = rows.reduce((a, r) => { a[r.key] = r.value; return a; }, {});
+  const env = (s.transbank_environment || 'integration').toLowerCase().trim();
+
+  if (env === 'production') {
+    const code = s.transbank_commerce_code;
+    const key  = s.transbank_api_key;
+    if (!code || !key) throw new Error('Código de comercio o API key de producción no configurados en el panel admin');
+    return new WebpayPlus.Transaction(new Options(code, key, Environment.Production));
+  }
+
+  // Integration: prefer DB-configured codes so el panel admin sincroniza correctamente
+  const code = s.transbank_commerce_code || IntegrationCommerceCodes.WEBPAY_PLUS;
+  const key  = s.transbank_api_key       || IntegrationApiKeys.WEBPAY;
+  return new WebpayPlus.Transaction(new Options(code, key, Environment.Integration));
 }
 
 async function creditDonor(userId, amount, token) {
@@ -434,6 +446,9 @@ router.post('/store/buy', requireUser, async (req, res) => {
   const item = await db.get('SELECT * FROM items WHERE id = ? AND is_active = 1', [item_id]);
   if (!item) return res.status(404).json({ error: 'Artículo no encontrado' });
 
+  const amount = Math.round(item.price);
+  if (amount < 1) return res.status(400).json({ error: 'Este artículo no tiene precio configurado. Contacta al administrador.' });
+
   const buyOrder = `FURI${Date.now()}${req.session.userId}`.substring(0, 26);
   await db.run(
     'INSERT INTO purchases (user_id, item_id, item_name, item_price, buy_order, status) VALUES (?, ?, ?, ?, ?, ?)',
@@ -442,14 +457,14 @@ router.post('/store/buy', requireUser, async (req, res) => {
 
   try {
     const siteRow = await db.get("SELECT value FROM server_settings WHERE key = 'site_url'");
-    const base = siteRow?.value?.replace(/\/$/, '') || `${req.protocol}://${req.get('host')}`;
+    const base = getBaseUrl(req, siteRow?.value);
     const tx = await getWebpayTx();
-    const tbk = await tx.create(buyOrder, String(req.session.userId), Math.round(item.price), `${base}/api/store/webpay/return`);
+    const tbk = await tx.create(buyOrder, String(req.session.userId), amount, `${base}/api/store/webpay/return`);
     res.json({ success: true, data: { redirect_url: `${tbk.url}?token_ws=${tbk.token}`, buy_order: buyOrder } });
   } catch (err) {
     await db.run("UPDATE purchases SET status = 'failed' WHERE buy_order = ?", [buyOrder]);
-    console.error('Transbank create error:', err.message);
-    res.status(500).json({ error: 'Error al iniciar el pago con Transbank. Intenta de nuevo.' });
+    console.error('Transbank create error:', err.message, err.stack);
+    res.status(500).json({ error: `Error Transbank: ${err.message}` });
   }
 });
 
@@ -467,6 +482,9 @@ router.post('/store/cart-buy', requireUser, async (req, res) => {
   }
 
   const total = cartItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
+  const amount = Math.round(total);
+  if (amount < 1) return res.status(400).json({ error: 'El total del carrito debe ser mayor a $0.' });
+
   const buyOrder = `CART${Date.now()}${req.session.userId}`.substring(0, 26);
 
   for (const item of cartItems) {
@@ -478,14 +496,14 @@ router.post('/store/cart-buy', requireUser, async (req, res) => {
 
   try {
     const siteRow = await db.get("SELECT value FROM server_settings WHERE key = 'site_url'");
-    const base = siteRow?.value?.replace(/\/$/, '') || `${req.protocol}://${req.get('host')}`;
+    const base = getBaseUrl(req, siteRow?.value);
     const tx = await getWebpayTx();
-    const tbk = await tx.create(buyOrder, String(req.session.userId), Math.round(total), `${base}/api/store/webpay/return`);
+    const tbk = await tx.create(buyOrder, String(req.session.userId), amount, `${base}/api/store/webpay/return`);
     res.json({ success: true, data: { redirect_url: `${tbk.url}?token_ws=${tbk.token}`, buy_order: buyOrder, total } });
   } catch (err) {
     await db.run("UPDATE purchases SET status = 'failed' WHERE buy_order = ?", [buyOrder]);
-    console.error('Transbank cart error:', err.message);
-    res.status(500).json({ error: 'Error al iniciar el pago con Transbank. Intenta de nuevo.' });
+    console.error('Transbank cart error:', err.message, err.stack);
+    res.status(500).json({ error: `Error Transbank: ${err.message}` });
   }
 });
 
