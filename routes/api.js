@@ -420,20 +420,26 @@ async function getWebpayTx() {
     "SELECT key, value FROM server_settings WHERE key IN ('transbank_environment','transbank_commerce_code','transbank_api_key')"
   );
   const s = rows.reduce((a, r) => { a[r.key] = r.value; return a; }, {});
-  const env = (s.transbank_environment || 'integration').toLowerCase().trim();
+  const env          = (s.transbank_environment || 'integration').toLowerCase().trim();
+  const configCode   = (s.transbank_commerce_code || '').trim();
+  const configKey    = (s.transbank_api_key || '').trim();
 
-  if (env === 'production') {
-    const code = s.transbank_commerce_code;
-    const key  = s.transbank_api_key;
-    if (!code || !key) throw new Error('Código de comercio o API key de producción no configurados en el panel admin');
-    return new WebpayPlus.Transaction(new Options(code, key, Environment.Production));
+  // Si se configuraron credenciales reales (distintas a las de prueba públicas), siempre usar producción
+  const isTestCode = !configCode || configCode === IntegrationCommerceCodes.WEBPAY_PLUS;
+  const isTestKey  = !configKey  || configKey  === IntegrationApiKeys.WEBPAY;
+  const useProduction = env === 'production' || (!isTestCode && !isTestKey);
+
+  if (useProduction) {
+    if (!configCode || !configKey) throw new Error('Código de comercio o API key no configurados en el panel admin');
+    return new WebpayPlus.Transaction(new Options(configCode, configKey, Environment.Production));
   }
 
-  // Integration: solo usar credenciales de la BD si están configuradas ambas; mezclar una sola da 401
-  const hasCustom = s.transbank_commerce_code && s.transbank_api_key;
-  const code = hasCustom ? s.transbank_commerce_code : IntegrationCommerceCodes.WEBPAY_PLUS;
-  const key  = hasCustom ? s.transbank_api_key       : IntegrationApiKeys.WEBPAY;
-  return new WebpayPlus.Transaction(new Options(code, key, Environment.Integration));
+  // Sin credenciales propias → ambiente de integración con credenciales públicas de prueba
+  return new WebpayPlus.Transaction(new Options(
+    IntegrationCommerceCodes.WEBPAY_PLUS,
+    IntegrationApiKeys.WEBPAY,
+    Environment.Integration
+  ));
 }
 
 async function creditDonor(userId, amount, token) {
