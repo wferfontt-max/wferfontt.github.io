@@ -540,4 +540,40 @@ router.patch('/purchases/:id', async (req, res) => {
   res.json({ success: true, message: 'Estado actualizado' });
 });
 
+// ── REVIEWS ───────────────────────────────────────────────────────────────────
+router.get('/reviews', async (req, res) => {
+  const rows = await db.all(`
+    SELECT r.*, u.email FROM reviews r
+    LEFT JOIN users u ON u.id = r.user_id
+    ORDER BY r.created_at DESC
+  `);
+  res.json({ success: true, data: rows });
+});
+
+router.delete('/reviews/:id', async (req, res) => {
+  const review = await db.get('SELECT id, author_name FROM reviews WHERE id = ?', [req.params.id]);
+  if (!review) return res.status(404).json({ error: 'Valoración no encontrada' });
+  await db.run('DELETE FROM reviews WHERE id = ?', [req.params.id]);
+  log(req, 'DELETE_REVIEW', 'review', req.params.id, `Eliminó valoración de ${review.author_name}`);
+  res.json({ success: true, message: 'Valoración eliminada' });
+});
+
+// ── STORY IMAGE UPLOAD ────────────────────────────────────────────────────────
+const storyUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 8 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    ['.jpg','.jpeg','.png','.gif','.webp'].includes(path.extname(file.originalname).toLowerCase())
+      ? cb(null, true) : cb(new Error('Solo imágenes'));
+  },
+});
+
+router.post('/upload/story-image', requireAuth, storyUpload.single('image'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No se subió ninguna imagen' });
+  const dataUri = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+  await db.run("UPDATE server_settings SET value=? WHERE key='story_image1'", [dataUri]);
+  log(req, 'UPDATE_STORY_IMAGE', 'settings', null, 'Actualizó imagen de historia');
+  res.json({ success: true, message: 'Imagen de historia actualizada' });
+});
+
 module.exports = router;

@@ -560,6 +560,15 @@ async function handleWebpayReturn(req, res) {
       const totalPaid = purchases.reduce((s, p) => s + parseFloat(p.item_price || 0), 0);
       const userId = purchases[0]?.user_id;
       if (userId) await creditDonor(userId, totalPaid, token_ws);
+      // Enviar emails con boucher al comprador y al admin
+      try {
+        const updatedPurchases = await db.all('SELECT * FROM purchases WHERE buy_order = ?', [resp.buy_order]);
+        const buyer = userId ? await db.get('SELECT * FROM users WHERE id = ?', [userId]) : null;
+        if (buyer) {
+          const { sendPurchaseEmail } = require('../services/mailer');
+          sendPurchaseEmail(updatedPurchases, buyer).catch(() => {});
+        }
+      } catch (_) {}
       return res.redirect(`/tienda/confirmacion?buy_order=${encodeURIComponent(resp.buy_order)}&result=success`);
     } else {
       await db.run(

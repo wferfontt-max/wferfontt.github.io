@@ -244,6 +244,7 @@
     <div class="nav-section-title">Web</div>
     <div class="nav-item" data-page="usuarios"><span class="icon">🧑‍💻</span> Usuarios Web</div>
     <div class="nav-item" data-page="compras"><span class="icon">💳</span> Compras</div>
+    <div class="nav-item" data-page="reviews"><span class="icon">⭐</span> Valoraciones</div>
     <div class="nav-section-title">Sistema</div>
     <div class="nav-item" data-page="settings"><span class="icon">⚙️</span> Configuración</div>
     <div class="nav-item" data-page="admins"><span class="icon">🔑</span> Administradores</div>
@@ -443,9 +444,28 @@
       </div>
     </div>
 
+    <!-- Reviews -->
+    <div class="page" id="page-reviews">
+      <div class="table-header"><span class="table-title">VALORACIONES Y COMENTARIOS</span></div>
+      <div class="table-wrap">
+        <table><thead><tr><th>Usuario</th><th>Correo</th><th>Puntuación</th><th>Comentario</th><th>Fecha</th><th>Acción</th></tr></thead>
+        <tbody id="reviewsTable"></tbody></table>
+      </div>
+    </div>
+
     <!-- Settings -->
     <div class="page" id="page-settings">
       <div class="table-header"><span class="table-title">CONFIGURACIÓN DEL SERVIDOR</span></div>
+      <!-- Upload imagen historia -->
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:20px;margin-bottom:20px;max-width:640px;">
+        <label style="font-size:.8rem;font-weight:600;color:var(--text-bright);display:block;margin-bottom:4px;">Imagen de Historia (sección inicio)</label>
+        <div style="font-size:.75rem;color:var(--muted);margin-bottom:12px;">Sube la imagen que aparece en la sección "Nuestra Historia" de la página de inicio.</div>
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+          <input type="file" id="storyImageFile" accept="image/*" style="color:var(--text);font-size:.8rem;">
+          <button class="btn-save" style="padding:8px 20px;font-size:.78rem;" onclick="uploadStoryImage()">Subir Imagen</button>
+        </div>
+        <div id="storyImgPreview" style="margin-top:12px;"></div>
+      </div>
       <div class="settings-grid" id="settingsGrid"></div>
       <div style="margin-top:20px;">
         <button class="btn-save" onclick="saveSettings()">Guardar Configuración</button>

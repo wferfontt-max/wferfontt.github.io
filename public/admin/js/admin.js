@@ -47,7 +47,7 @@ const pageTitles = {
   characters: 'PERSONAJES', factions: 'FACCIONES', team: 'EQUIPO',
   rules: 'REGLAS', store: 'TIENDA', forum: 'FORO', items: 'ITEMS',
   settings: 'CONFIGURACIÓN', admins: 'ADMINISTRADORES',
-  usuarios: 'USUARIOS WEB', compras: 'COMPRAS',
+  usuarios: 'USUARIOS WEB', compras: 'COMPRAS', reviews: 'VALORACIONES',
 };
 
 async function showPage(page) {
@@ -76,6 +76,7 @@ async function loadPage(page) {
     case 'admins': await loadAdmins(); break;
     case 'usuarios': await loadUsuarios(); break;
     case 'compras': await loadCompras(); break;
+    case 'reviews': await loadReviews(); break;
   }
 }
 
@@ -1040,5 +1041,53 @@ async function loadItems() {
           </div></td>
         </tr>`).join('')
       : '<tr><td colspan="7" class="empty-state"><span class="empty-icon">📦</span>Sin items creados</td></tr>';
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+/* ── Reviews ───────────────────────────────────────────────── */
+async function loadReviews() {
+  try {
+    const { data } = await api('GET', '/api/admin/reviews');
+    const stars = n => '★'.repeat(n) + '☆'.repeat(5 - n);
+    document.getElementById('reviewsTable').innerHTML = data.length
+      ? data.map(r => `
+        <tr>
+          <td><strong style="color:var(--text-bright)">${esc(r.author_name)}</strong></td>
+          <td style="color:var(--muted);font-size:.78rem;">${esc(r.email||'—')}</td>
+          <td style="color:#facc15;letter-spacing:1px;">${stars(r.rating)} <span style="color:var(--muted);font-size:.75rem;">(${r.rating}/5)</span></td>
+          <td style="max-width:320px;font-size:.83rem;">${esc(r.comment||'Sin comentario')}</td>
+          <td style="font-size:.75rem;color:var(--muted)">${fmtDate(r.created_at)}</td>
+          <td><button class="btn-delete" onclick="deleteReview(${r.id},'${esc(r.author_name)}')">Eliminar</button></td>
+        </tr>`).join('')
+      : '<tr><td colspan="6" class="empty-state"><span class="empty-icon">⭐</span>Sin valoraciones</td></tr>';
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+async function deleteReview(id, name) {
+  if (!confirm(`¿Eliminar la valoración de "${name}"?`)) return;
+  try {
+    await api('DELETE', `/api/admin/reviews/${id}`);
+    showToast('Valoración eliminada', 'success');
+    await loadReviews();
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+/* ── Story Image Upload ─────────────────────────────────────── */
+async function uploadStoryImage() {
+  const file = document.getElementById('storyImageFile')?.files?.[0];
+  if (!file) { showToast('Selecciona una imagen primero', 'error'); return; }
+  const fd = new FormData();
+  fd.append('image', file);
+  try {
+    const r = await fetch('/api/admin/upload/story-image', { method: 'POST', body: fd });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Error al subir');
+    showToast('✓ Imagen de historia actualizada', 'success');
+    const prev = document.getElementById('storyImgPreview');
+    if (prev) {
+      const reader = new FileReader();
+      reader.onload = e => { prev.innerHTML = `<img src="${e.target.result}" style="max-width:100%;max-height:180px;border-radius:6px;object-fit:cover;margin-top:4px;">`; };
+      reader.readAsDataURL(file);
+    }
   } catch (e) { showToast(e.message, 'error'); }
 }
