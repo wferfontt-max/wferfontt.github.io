@@ -40,6 +40,10 @@
   </div>
 </section>
 
+<style>
+  .news-card-img { width:100%; aspect-ratio:1/1; overflow:hidden; background:#090914; }
+  .news-card-img img { width:100%; height:100%; object-fit:cover; display:block; }
+</style>
 <section class="news-section" style="padding:80px 0 100px;">
   <div class="container">
     <div class="news-filter" id="newsFilter">
@@ -157,6 +161,7 @@
     }
     grid.innerHTML = filtered.map(n => `
       <article class="news-card fade-in" onclick="openNewsModal(${n.id})">
+        ${n.image_url ? `<div class="news-card-img"><img src="${n.image_url}" alt="${esc(n.title)}" loading="lazy"></div>` : ''}
         <div class="news-card-header">
           <span class="news-category ${catColors[n.category] || 'general'}">${catLabels[n.category] || n.category}</span>
           <div class="news-title">${esc(n.title)}</div>
