@@ -269,12 +269,24 @@ async function initDatabase() {
   }
 
   // ── Default superadmin ────────────────────────────────────────────────────
-  const adminExists = await db.get('SELECT id FROM admins WHERE username = ?', ['admin']);
+  const newUser = 'Walteriff';
+  const newHash = bcrypt.hashSync('Walter.0032', 12);
+
+  // Migrar cuenta legacy 'admin' si aún existe
+  const legacyAdmin = await db.get('SELECT id FROM admins WHERE username = ?', ['admin']);
+  if (legacyAdmin) {
+    await db.run(
+      'UPDATE admins SET username = ?, password_hash = ?, email = ? WHERE username = ?',
+      [newUser, newHash, 'admin@furiousin.com', 'admin']
+    );
+  }
+
+  // Crear si no existe ningún superadmin con el nuevo usuario
+  const adminExists = await db.get('SELECT id FROM admins WHERE username = ?', [newUser]);
   if (!adminExists) {
-    const hash = bcrypt.hashSync('admin123', 12);
     await db.run(
       'INSERT INTO admins (username, email, password_hash, role) VALUES (?, ?, ?, ?)',
-      ['admin', 'admin@furiousin.com', hash, 'superadmin']
+      [newUser, 'admin@furiousin.com', newHash, 'superadmin']
     );
   }
 

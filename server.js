@@ -79,7 +79,7 @@ initDatabase()
       console.log(`\n🔥 FURIOUS INDUSTRIES RP`);
       console.log(`   Servidor: http://localhost:${PORT}`);
       console.log(`   Admin:    http://localhost:${PORT}/admin/login`);
-      console.log(`   Login:    admin / admin123\n`);
+      console.log(`   Login:    Walteriff / [configurado]\n`);
     });
   })
   .catch(err => {
