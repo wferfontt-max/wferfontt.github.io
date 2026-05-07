@@ -67,6 +67,12 @@
   </div>
 </div>
 
+<!-- Lightbox -->
+<div id="lightbox" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.92);cursor:zoom-out;align-items:center;justify-content:center;" onclick="closeLightbox()">
+  <button onclick="closeLightbox()" style="position:absolute;top:16px;right:20px;background:none;border:none;color:#fff;font-size:2rem;cursor:pointer;line-height:1;z-index:10000;">✕</button>
+  <img id="lightboxImg" src="" alt="" style="max-width:95vw;max-height:92vh;object-fit:contain;border-radius:8px;box-shadow:0 0 60px rgba(0,0,0,0.8);" onclick="event.stopPropagation()">
+</div>
+
 <footer class="footer">
   <div class="container">
     <div class="footer-grid">
@@ -193,7 +199,7 @@
         <div class="modal-news-title">${esc(data.title)}</div>
         <div class="modal-news-meta">Por ${esc(data.author)} · ${formatDate(data.created_at)} · ${data.views} vistas</div>
         <div class="modal-news-content">${data.content || ''}</div>
-        ${data.image_url ? `<div style="margin-top:24px;border-radius:10px;overflow:hidden;"><img src="${data.image_url}" alt="${esc(data.title)}" style="width:100%;height:auto;display:block;border-radius:10px;"></div>` : ''}
+        ${data.image_url ? `<div style="margin-top:24px;border-radius:10px;overflow:hidden;"><img src="${data.image_url}" alt="${esc(data.title)}" style="width:100%;height:auto;display:block;border-radius:10px;cursor:zoom-in;" onclick="openLightbox(this.src)" title="Click para ampliar"></div>` : ''}
       `;
       document.getElementById('newsModal').classList.add('active');
       document.body.style.overflow = 'hidden';
@@ -228,6 +234,19 @@
 
   loadStats();
   loadNews();
+
+  function openLightbox(src) {
+    const lb = document.getElementById('lightbox');
+    document.getElementById('lightboxImg').src = src;
+    lb.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+  function closeLightbox() {
+    document.getElementById('lightbox').style.display = 'none';
+    document.getElementById('lightboxImg').src = '';
+    document.body.style.overflow = '';
+  }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
 </script>
 <script src="/js/user-nav.js"></script>
 </body>
