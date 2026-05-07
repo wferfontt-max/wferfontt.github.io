@@ -406,23 +406,23 @@ function rfmtColor(input) {
 }
 function rfmtJustify() {
   restoreRichSel();
-  const sel = window.getSelection();
   const editor = document.querySelector('.rich-editor[contenteditable]');
   if (!editor) return;
-  if (!sel || !sel.rangeCount) {
-    editor.querySelectorAll('p,div,h1,h2,h3,li,blockquote').forEach(el => { el.style.textAlign = 'justify'; });
-    updateRichToolbarState(); return;
-  }
-  const range = sel.getRangeAt(0);
-  let node = range.commonAncestorContainer;
-  if (node.nodeType === 3) node = node.parentNode;
-  if (node === editor) {
+  document.execCommand('justifyFull', false, null);
+  const sel = window.getSelection();
+  const range = sel && sel.rangeCount ? sel.getRangeAt(0) : null;
+  if (range) {
     editor.querySelectorAll('p,div,h1,h2,h3,li,blockquote').forEach(el => {
-      if (range.intersectsNode(el)) el.style.textAlign = el.style.textAlign === 'justify' ? '' : 'justify';
+      if (range.intersectsNode(el)) el.style.textAlign = 'justify';
     });
-  } else {
+    let node = range.commonAncestorContainer;
+    if (node.nodeType === 3) node = node.parentNode;
     while (node && node !== editor && !['P','DIV','H1','H2','H3','LI','BLOCKQUOTE'].includes(node.tagName)) node = node.parentNode;
-    if (node && node !== editor) node.style.textAlign = node.style.textAlign === 'justify' ? '' : 'justify';
+    if (node && node !== editor) node.style.textAlign = 'justify';
+    else if (node === editor) editor.style.textAlign = 'justify';
+  } else {
+    editor.querySelectorAll('p,div,h1,h2,h3,li,blockquote').forEach(el => { el.style.textAlign = 'justify'; });
+    editor.style.textAlign = 'justify';
   }
   updateRichToolbarState();
 }
