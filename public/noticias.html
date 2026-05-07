@@ -188,7 +188,7 @@
         <div class="modal-news-title">${esc(data.title)}</div>
         <div class="modal-news-meta">Por ${esc(data.author)} · ${formatDate(data.created_at)} · ${data.views} vistas</div>
         <div class="modal-news-content">${data.content || ''}</div>
-        ${data.image_url ? `<div style="margin-top:24px;border-radius:10px;overflow:hidden;"><img src="${data.image_url}" alt="${esc(data.title)}" style="width:100%;max-height:420px;object-fit:cover;display:block;border-radius:10px;"></div>` : ''}
+        ${data.image_url ? `<div style="margin-top:24px;border-radius:10px;overflow:hidden;"><img src="${data.image_url}" alt="${esc(data.title)}" style="width:100%;height:auto;display:block;border-radius:10px;"></div>` : ''}
       `;
       document.getElementById('newsModal').classList.add('active');
       document.body.style.overflow = 'hidden';
