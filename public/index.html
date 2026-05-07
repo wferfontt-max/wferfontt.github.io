@@ -251,26 +251,52 @@ fetch('/api/stats').then(r=>r.ok?r.json():null).then(j=>{
 <!-- ── Latest News ────────────────────────────────────────── -->
 <section id="ultimasNoticias" style="background:linear-gradient(180deg,rgba(6,6,10,0.82) 0%,rgba(10,10,22,0.78) 100%);padding:100px 0 90px;border-top:1px solid rgba(255,255,255,0.04);">
 <style>
-  .news-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:24px; margin-top:48px; }
-  .news-card { background:var(--bg-card,#0f0f1e); border:1px solid rgba(255,255,255,0.07); border-radius:12px; overflow:hidden; transition:transform .25s, border-color .25s, box-shadow .25s; display:flex; flex-direction:column; }
-  .news-card:hover { transform:translateY(-5px); border-color:rgba(0,196,204,0.35); box-shadow:0 8px 32px rgba(0,0,0,0.45), 0 0 20px rgba(0,196,204,0.07); }
-  .news-card-media { position:relative; width:100%; aspect-ratio:16/9; overflow:hidden; background:#090914; }
-  .news-card-media img { width:100%; height:100%; object-fit:cover; display:block; transition:transform .4s; }
-  .news-card:hover .news-card-media img { transform:scale(1.04); }
+  /* Carrusel */
+  .news-carousel-wrap { position:relative; margin-top:48px; }
+  .news-track {
+    display:flex; gap:24px;
+    overflow-x:auto; scroll-snap-type:x mandatory; scroll-behavior:smooth;
+    padding:8px 4px 18px;
+    -ms-overflow-style:none; scrollbar-width:thin; scrollbar-color:rgba(0,196,204,0.25) transparent;
+  }
+  .news-track::-webkit-scrollbar { height:4px; }
+  .news-track::-webkit-scrollbar-track { background:transparent; }
+  .news-track::-webkit-scrollbar-thumb { background:rgba(0,196,204,0.3); border-radius:2px; }
+  /* Flechas de navegación */
+  .news-nav { display:flex; justify-content:center; gap:12px; margin-top:22px; }
+  .news-nav-btn {
+    width:42px; height:42px; border-radius:50%;
+    background:rgba(0,196,204,0.08); border:1px solid rgba(0,196,204,0.25);
+    color:#00c4cc; font-size:1.1rem; cursor:pointer; transition:all .2s;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .news-nav-btn:hover { background:rgba(0,196,204,0.2); box-shadow:0 0 14px rgba(0,196,204,0.2); }
+  .news-nav-btn:disabled { opacity:.25; cursor:default; }
+  /* Cards */
+  .news-card {
+    flex:0 0 300px; scroll-snap-align:start;
+    background:var(--bg-card,#0f0f1e); border:1px solid rgba(255,255,255,0.07);
+    border-radius:12px; overflow:hidden;
+    transition:transform .25s, border-color .25s, box-shadow .25s;
+    display:flex; flex-direction:column; text-decoration:none;
+  }
+  .news-card:hover { transform:translateY(-5px); border-color:rgba(0,196,204,0.35); box-shadow:0 8px 32px rgba(0,0,0,0.45),0 0 20px rgba(0,196,204,0.07); }
+  .news-card-media { position:relative; width:100%; height:200px; overflow:hidden; background:#090914; display:flex; align-items:center; justify-content:center; }
+  .news-card-media img { width:100%; height:100%; object-fit:contain; display:block; }
   .news-card-media iframe { width:100%; height:100%; border:none; display:block; }
-  .news-card-media-placeholder { width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:2.5rem; opacity:.2; }
+  .news-card-media-placeholder { font-size:2.5rem; opacity:.2; }
   .news-card-body { padding:20px 22px 24px; flex:1; display:flex; flex-direction:column; gap:10px; }
   .news-card-badge { display:inline-block; font-family:'Orbitron',sans-serif; font-size:.6rem; font-weight:700; letter-spacing:.14em; padding:3px 10px; border-radius:20px; text-transform:uppercase; }
-  .news-badge-general  { background:rgba(0,196,204,.12); color:#00c4cc; border:1px solid rgba(0,196,204,.25); }
-  .news-badge-update   { background:rgba(74,222,128,.12); color:#4ade80; border:1px solid rgba(74,222,128,.25); }
-  .news-badge-event    { background:rgba(251,191,36,.12); color:#fbbf24; border:1px solid rgba(251,191,36,.25); }
-  .news-badge-urgent   { background:rgba(248,113,113,.12); color:#f87171; border:1px solid rgba(248,113,113,.25); }
+  .news-badge-general { background:rgba(0,196,204,.12); color:#00c4cc; border:1px solid rgba(0,196,204,.25); }
+  .news-badge-update  { background:rgba(74,222,128,.12); color:#4ade80; border:1px solid rgba(74,222,128,.25); }
+  .news-badge-event   { background:rgba(251,191,36,.12); color:#fbbf24; border:1px solid rgba(251,191,36,.25); }
+  .news-badge-urgent  { background:rgba(248,113,113,.12); color:#f87171; border:1px solid rgba(248,113,113,.25); }
   .news-card-title { font-family:'Orbitron',sans-serif; font-size:.85rem; font-weight:700; color:#fff; line-height:1.4; letter-spacing:.03em; margin:0; }
   .news-card-excerpt { font-size:.82rem; color:rgba(255,255,255,0.55); line-height:1.6; margin:0; flex:1; }
   .news-card-footer { display:flex; align-items:center; justify-content:space-between; padding-top:12px; border-top:1px solid rgba(255,255,255,0.06); }
   .news-card-author { font-size:.72rem; color:rgba(255,255,255,0.35); font-family:'Orbitron',sans-serif; letter-spacing:.06em; }
   .news-card-date { font-size:.7rem; color:rgba(255,255,255,0.3); }
-  .news-empty { grid-column:1/-1; text-align:center; padding:60px 20px; color:rgba(255,255,255,0.25); font-size:.9rem; }
+  .news-empty { text-align:center; padding:60px 20px; color:rgba(255,255,255,0.25); font-size:.9rem; }
 </style>
 <div class="container">
   <div class="section-header fade-in">
@@ -278,10 +304,16 @@ fetch('/api/stats').then(r=>r.ok?r.json():null).then(j=>{
     <h2 class="section-title">Últimas Noticias</h2>
     <p class="section-subtitle">Las novedades más recientes del servidor, eventos y actualizaciones</p>
   </div>
-  <div class="news-grid" id="homeNewsGrid">
-    <div class="news-empty">Cargando noticias...</div>
+  <div class="news-carousel-wrap fade-in">
+    <div class="news-track" id="homeNewsGrid">
+      <div class="news-empty">Cargando noticias...</div>
+    </div>
+    <div class="news-nav" id="newsNav" style="display:none;">
+      <button class="news-nav-btn" id="newsPrev" aria-label="Anterior">&#8592;</button>
+      <button class="news-nav-btn" id="newsNext" aria-label="Siguiente">&#8594;</button>
+    </div>
   </div>
-  <div style="text-align:center;margin-top:44px;" class="fade-in">
+  <div style="text-align:center;margin-top:36px;" class="fade-in">
     <a href="/noticias" class="btn-primary" style="display:inline-flex;">
       <span>VER TODAS LAS NOTICIAS</span>
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:18px;height:18px;"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
@@ -297,8 +329,7 @@ fetch('/api/stats').then(r=>r.ok?r.json():null).then(j=>{
     try { return new Date(d).toLocaleDateString('es-CL',{day:'2-digit',month:'short',year:'numeric'}); } catch(e){ return ''; }
   }
   function getYtEmbedId(url) {
-    if (!url) return null;
-    const m = url.match(/embed\/([^?&"'>]+)/);
+    const m = url && url.match(/embed\/([^?&"'>]+)/);
     return m ? m[1] : null;
   }
   function renderNewsCard(n) {
@@ -307,16 +338,14 @@ fetch('/api/stats').then(r=>r.ok?r.json():null).then(j=>{
     let media = '';
     if (n.video_url) {
       const ytId = getYtEmbedId(n.video_url);
-      media = ytId
-        ? `<div class="news-card-media"><iframe src="https://www.youtube.com/embed/${ytId}" allow="autoplay;encrypted-media" allowfullscreen loading="lazy"></iframe></div>`
-        : `<div class="news-card-media"><iframe src="${n.video_url}" allowfullscreen loading="lazy"></iframe></div>`;
+      media = `<div class="news-card-media"><iframe src="${ytId ? 'https://www.youtube.com/embed/'+ytId : n.video_url}" allow="autoplay;encrypted-media" allowfullscreen loading="lazy"></iframe></div>`;
     } else if (n.image_url) {
       media = `<div class="news-card-media"><img src="${n.image_url}" alt="${n.title}" loading="lazy"></div>`;
     } else {
       media = `<div class="news-card-media"><div class="news-card-media-placeholder">📰</div></div>`;
     }
     const excerpt = n.excerpt ? n.excerpt.replace(/<[^>]*>/g,'').substring(0,120) + (n.excerpt.length > 120 ? '...' : '') : '';
-    return `<a href="/noticias" class="news-card" style="text-decoration:none;">
+    return `<a href="/noticias" class="news-card">
       ${media}
       <div class="news-card-body">
         <span class="news-card-badge news-badge-${badge}">${label}</span>
@@ -329,16 +358,25 @@ fetch('/api/stats').then(r=>r.ok?r.json():null).then(j=>{
       </div>
     </a>`;
   }
-  fetch('/api/news?limit=3')
+  fetch('/api/news?limit=20')
     .then(function(r){ return r.ok ? r.json() : null; })
     .then(function(j){
-      const grid = document.getElementById('homeNewsGrid');
-      if (!grid) return;
+      const track = document.getElementById('homeNewsGrid');
+      if (!track) return;
       if (!j || !j.data || !j.data.length) {
-        grid.innerHTML = '<div class="news-empty">No hay noticias publicadas aún.</div>';
+        track.innerHTML = '<div class="news-empty">No hay noticias publicadas aún.</div>';
         return;
       }
-      grid.innerHTML = j.data.map(renderNewsCard).join('');
+      track.innerHTML = j.data.map(renderNewsCard).join('');
+      if (j.data.length > 1) {
+        const nav = document.getElementById('newsNav');
+        const prev = document.getElementById('newsPrev');
+        const next = document.getElementById('newsNext');
+        nav.style.display = 'flex';
+        const cardW = 300 + 24; // card width + gap
+        prev.addEventListener('click', function(){ track.scrollBy({ left: -cardW * 2, behavior:'smooth' }); });
+        next.addEventListener('click', function(){ track.scrollBy({ left:  cardW * 2, behavior:'smooth' }); });
+      }
     })
     .catch(function(){ document.getElementById('homeNewsGrid').innerHTML = '<div class="news-empty">No se pudieron cargar las noticias.</div>'; });
 })();
