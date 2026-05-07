@@ -634,7 +634,12 @@ const formTemplates = {
       <div class="form-group"><label>Título mostrado *</label><input type="text" id="f-title" value="${esc(data?.title||'')}" placeholder="Ej: Fundador & CEO" /></div>
       <div class="form-group"><label>Orden</label><input type="number" id="f-member_order" value="${data?.member_order??0}" min="0" /></div>
     </div>
-    <div class="form-group"><label>Foto (URL de imagen)</label><input type="text" id="f-photo_url" value="${esc(data?.photo_url||'')}" placeholder="https://... (dejar vacío para usar iniciales)" /></div>
+    <div class="form-group">
+      <label>Foto del miembro</label>
+      ${data?.photo_url ? `<div style="margin-bottom:10px;display:flex;align-items:center;gap:12px;"><img src="${esc(data.photo_url)}" alt="Foto actual" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid var(--border);"><span style="font-size:.78rem;color:var(--muted);">Foto actual — sube una nueva para reemplazarla</span></div>` : ''}
+      <input type="file" id="f-photo" accept="image/jpeg,image/png,image/gif,image/webp" style="width:100%;padding:8px;background:var(--card2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.85rem;cursor:pointer;">
+      <p style="margin:4px 0 0;font-size:.72rem;color:var(--muted);">JPG, PNG, GIF o WEBP · máx. 5 MB · La foto <strong>nunca se elimina</strong>, solo se reemplaza</p>
+    </div>
     <div class="form-row">
       <div class="form-group"><label>Discord</label><input type="text" id="f-discord" value="${esc(data?.discord||'')}" placeholder="@usuario" /></div>
       <div class="form-group"><label>Año de ingreso</label><input type="text" id="f-joined_date" value="${esc(data?.joined_date||'')}" placeholder="Ej: 2022" /></div>
@@ -781,7 +786,27 @@ async function saveModal() {
       await loadPage(currentPage);
       return;
     }
-    else if (e === 'team') body = { name: getFieldVal('f-name'), role: getFieldVal('f-role'), title: getFieldVal('f-title'), bio: getFieldVal('f-bio'), photo_url: getFieldVal('f-photo_url'), discord: getFieldVal('f-discord'), member_order: parseInt(getFieldVal('f-member_order')||0), joined_date: getFieldVal('f-joined_date'), is_active: hasField('f-is_active') ? getFieldVal('f-is_active') : true };
+    else if (e === 'team') {
+      const fd = new FormData();
+      fd.append('name', getFieldVal('f-name') || '');
+      fd.append('role', getFieldVal('f-role') || '');
+      fd.append('title', getFieldVal('f-title') || '');
+      fd.append('bio', getFieldVal('f-bio') || '');
+      fd.append('discord', getFieldVal('f-discord') || '');
+      fd.append('member_order', getFieldVal('f-member_order') || '0');
+      fd.append('joined_date', getFieldVal('f-joined_date') || '');
+      if (hasField('f-is_active')) fd.append('is_active', getFieldVal('f-is_active') ? 'true' : 'false');
+      const fi = document.getElementById('f-photo');
+      if (fi?.files?.[0]) fd.append('photo', fi.files[0]);
+      const tUrl = '/api/admin/team' + (modalMode === 'edit' ? `/${editingId}` : '');
+      const tResp = await fetch(tUrl, { method: modalMode === 'edit' ? 'PUT' : 'POST', body: fd, credentials: 'same-origin' });
+      if (!tResp.ok) { const err = await tResp.json().catch(() => ({})); throw new Error(err.error || 'Error al guardar'); }
+      const tResult = await tResp.json();
+      showToast(tResult.message || 'Guardado exitosamente', 'success');
+      closeMainModal();
+      await loadPage(currentPage);
+      return;
+    }
     else if (e === 'admins') { body = { username: getFieldVal('f-username'), email: getFieldVal('f-email'), role: getFieldVal('f-role') }; const pw = getFieldVal('f-password'); if (pw) body.password = pw; }
     else if (e === 'donors') body = { username: getFieldVal('f-username'), amount: parseFloat(getFieldVal('f-amount')||0), discord: getFieldVal('f-discord'), avatar_url: getFieldVal('f-avatar_url'), message: getFieldVal('f-message') };
     else if (e === 'items') {

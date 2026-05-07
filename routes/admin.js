@@ -32,6 +32,20 @@ const itemUpload = multer({
   },
 });
 
+const teamPhotoDir = path.join(__dirname, '..', 'public', 'uploads', 'team');
+if (!fs.existsSync(teamPhotoDir)) fs.mkdirSync(teamPhotoDir, { recursive: true });
+const teamPhotoUpload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => cb(null, teamPhotoDir),
+    filename: (req, file, cb) => cb(null, `team_${Date.now()}${path.extname(file.originalname)}`),
+  }),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    ['.jpg','.jpeg','.png','.gif','.webp'].includes(path.extname(file.originalname).toLowerCase())
+      ? cb(null, true) : cb(new Error('Solo imágenes'));
+  },
+});
+
 router.use(requireAuth);
 
 function log(req, action, type, id, details) {
@@ -292,22 +306,26 @@ router.get('/team', async (req, res) => {
   res.json({ success: true, data: await db.all('SELECT * FROM team_members ORDER BY member_order') });
 });
 
-router.post('/team', async (req, res) => {
-  const { name, role, title, bio, photo_url, discord, member_order, joined_date } = req.body;
+router.post('/team', teamPhotoUpload.single('photo'), async (req, res) => {
+  const { name, role, title, bio, discord, member_order, joined_date } = req.body;
   if (!name || !role || !title) return res.status(400).json({ error: 'Nombre, rol y título son requeridos' });
+  const photo_url = req.file ? `/uploads/team/${req.file.filename}` : null;
   const r = await db.run(
     'INSERT INTO team_members (name, role, title, bio, photo_url, discord, member_order, joined_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-    [name, role, title, bio || null, photo_url || null, discord || null, member_order || 0, joined_date || null]
+    [name, role, title, bio || null, photo_url, discord || null, member_order || 0, joined_date || null]
   );
   log(req, 'CREATE_TEAM', 'team', r.lastInsertRowid, `Creó miembro: ${name}`);
   res.json({ success: true, data: { id: r.lastInsertRowid }, message: 'Miembro creado' });
 });
 
-router.put('/team/:id', async (req, res) => {
-  const { name, role, title, bio, photo_url, discord, member_order, joined_date, is_active } = req.body;
+router.put('/team/:id', teamPhotoUpload.single('photo'), async (req, res) => {
+  const { name, role, title, bio, discord, member_order, joined_date, is_active } = req.body;
+  const current = await db.get('SELECT photo_url FROM team_members WHERE id = ?', [req.params.id]);
+  // Only replace photo if a new file is uploaded — never delete the existing one
+  const photo_url = req.file ? `/uploads/team/${req.file.filename}` : (current?.photo_url || null);
   await db.run(
     'UPDATE team_members SET name=?, role=?, title=?, bio=?, photo_url=?, discord=?, member_order=?, joined_date=?, is_active=? WHERE id=?',
-    [name, role, title, bio || null, photo_url || null, discord || null, member_order || 0, joined_date || null, is_active !== undefined ? (is_active ? 1 : 0) : 1, req.params.id]
+    [name, role, title, bio || null, photo_url, discord || null, member_order || 0, joined_date || null, is_active !== undefined ? (is_active ? 1 : 0) : 1, req.params.id]
   );
   log(req, 'UPDATE_TEAM', 'team', req.params.id, `Actualizó miembro: ${name}`);
   res.json({ success: true, message: 'Miembro actualizado' });
