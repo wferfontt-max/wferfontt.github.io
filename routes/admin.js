@@ -375,6 +375,20 @@ router.put('/settings', async (req, res) => {
   }
 });
 
+// ── TEST EMAIL ────────────────────────────────────────────────────────────────
+router.post('/test-email', async (req, res) => {
+  try {
+    const { sendTestEmail } = require('../services/mailer');
+    const admin = await db.get('SELECT email FROM admins WHERE id = ?', [req.session.adminId]);
+    const to = admin?.email || 'administracion@furiousind.com';
+    await sendTestEmail(to);
+    res.json({ success: true, message: `Correo de prueba enviado a ${to}` });
+  } catch (e) {
+    console.error('[test-email]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ── ADMINS (superadmin only) ───────────────────────────────────────────────────
 router.get('/admins', requireSuperAdmin, async (req, res) => {
   res.json({ success: true, data: await db.all('SELECT id, username, email, role, created_at, last_login, is_active FROM admins ORDER BY created_at') });

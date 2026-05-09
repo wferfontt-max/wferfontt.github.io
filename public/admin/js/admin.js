@@ -357,10 +357,32 @@ async function saveSettings() {
     const el = document.getElementById(`setting-${key}`);
     if (el) settings[key] = el.value;
   });
+  // Include SMTP fields even if not in settingsData yet
+  ['site_url','smtp_host','smtp_port','smtp_user','smtp_pass','smtp_from'].forEach(key => {
+    const el = document.getElementById(`setting-${key}`);
+    if (el && !(key in settings)) settings[key] = el.value;
+  });
   try {
     await api('PUT', '/api/admin/settings', { settings });
     showToast('Configuración guardada', 'success');
   } catch (e) { showToast(e.message, 'error'); }
+}
+
+async function sendTestEmail() {
+  const btn = document.querySelector('button[onclick="sendTestEmail()"]');
+  const result = document.getElementById('testEmailResult');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Enviando...'; }
+  if (result) result.textContent = '';
+  try {
+    const r = await api('POST', '/api/admin/test-email', {});
+    if (result) { result.textContent = '✅ ' + r.message; result.style.color = '#4ade80'; }
+    showToast(r.message, 'success');
+  } catch (e) {
+    if (result) { result.textContent = '❌ ' + e.message; result.style.color = '#f87171'; }
+    showToast(e.message, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '✉️ Enviar correo de prueba'; }
+  }
 }
 
 /* ── Admins ────────────────────────────────────────────────── */

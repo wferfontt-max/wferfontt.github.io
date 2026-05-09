@@ -467,8 +467,10 @@
         <div id="storyImgPreview" style="margin-top:12px;"></div>
       </div>
       <div class="settings-grid" id="settingsGrid"></div>
-      <div style="margin-top:20px;">
+      <div style="margin-top:20px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
         <button class="btn-save" onclick="saveSettings()">Guardar Configuración</button>
+        <button class="btn-edit" onclick="sendTestEmail()" style="background:rgba(0,196,204,.15);border-color:rgba(0,196,204,.4);color:#00c4cc;">✉️ Enviar correo de prueba</button>
+        <span id="testEmailResult" style="font-size:.8rem;color:var(--muted);"></span>
       </div>
     </div>
 
