@@ -379,6 +379,7 @@ async function sendTestEmail() {
       credentials: 'same-origin',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({}),
+      signal: AbortSignal.timeout(20000),
     });
     const data = await resp.json();
     if (resp.ok) {
