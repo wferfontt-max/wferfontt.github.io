@@ -1,3 +1,6 @@
+// Force IPv4 DNS resolution — Railway has no IPv6 routes to external SMTP servers
+require('dns').setDefaultResultOrder('ipv4first');
+
 const express = require('express');
 const session = require('express-session');
 const helmet = require('helmet');
