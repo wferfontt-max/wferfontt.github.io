@@ -1025,13 +1025,15 @@ async function loadUsuarios() {
           <td style="font-size:.75rem;color:var(--muted)">${u.last_login ? fmtDate(u.last_login) : '<span style="color:var(--muted)">Nunca</span>'}</td>
           <td style="text-align:center">${u.total_purchases || 0}</td>
           <td style="color:var(--primary);font-weight:700">$${parseFloat(u.total_spent||0).toFixed(2)}</td>
+          <td><span class="badge badge-${u.email_verified ? 'success' : 'warning'}">${u.email_verified ? '✔ Verificado' : '✗ Sin verificar'}</span></td>
           <td><span class="badge badge-${u.is_active ? 'success' : 'danger'}">${u.is_active ? 'Activo' : 'Inactivo'}</span></td>
           <td><div class="td-actions">
             <button class="btn-edit" onclick="toggleUser(${u.id})">${u.is_active ? 'Desactivar' : 'Activar'}</button>
+            ${!u.email_verified ? `<button class="btn-edit" style="background:rgba(250,204,21,.15);color:#facc15;border-color:rgba(250,204,21,.3)" onclick="verifyUser(${u.id})">Verificar</button>` : ''}
             ${currentAdmin.role === 'superadmin' ? `<button class="btn-delete" onclick="deleteUser(${u.id},'${esc(u.full_name)}')">Eliminar</button>` : ''}
           </div></td>
         </tr>`).join('')
-      : '<tr><td colspan="10" class="empty-state"><span class="empty-icon">🧑‍💻</span>Sin usuarios registrados</td></tr>';
+      : '<tr><td colspan="11" class="empty-state"><span class="empty-icon">🧑‍💻</span>Sin usuarios registrados</td></tr>';
   } catch (e) { showToast(e.message, 'error'); }
 }
 
@@ -1039,6 +1041,14 @@ async function toggleUser(id) {
   try {
     await api('PATCH', `/api/admin/users/${id}/toggle`);
     showToast('Estado de usuario actualizado', 'success');
+    await loadUsuarios();
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+async function verifyUser(id) {
+  try {
+    await api('PATCH', `/api/admin/users/${id}/verify`);
+    showToast('Cuenta verificada manualmente', 'success');
     await loadUsuarios();
   } catch (e) { showToast(e.message, 'error'); }
 }

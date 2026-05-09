@@ -524,13 +524,13 @@ router.delete('/items/:id', async (req, res) => {
 router.get('/users', async (req, res) => {
   const users = await db.all(`
     SELECT u.id, u.full_name, u.birth_date, u.email, u.discord_username, u.discord_id,
-           u.avatar_url, u.is_active, u.created_at, u.last_login,
+           u.avatar_url, u.is_active, u.email_verified, u.created_at, u.last_login,
            COUNT(p.id) as total_purchases,
            COALESCE(SUM(CASE WHEN p.status='completed' THEN p.item_price ELSE 0 END), 0) as total_spent
     FROM users u
     LEFT JOIN purchases p ON p.user_id = u.id
     GROUP BY u.id, u.full_name, u.birth_date, u.email, u.discord_username, u.discord_id,
-             u.avatar_url, u.is_active, u.created_at, u.last_login
+             u.avatar_url, u.is_active, u.email_verified, u.created_at, u.last_login
     ORDER BY u.created_at DESC
   `);
   res.json({ success: true, data: users });
@@ -543,6 +543,14 @@ router.patch('/users/:id/toggle', async (req, res) => {
   await db.run('UPDATE users SET is_active = ? WHERE id = ?', [newActive, user.id]);
   log(req, newActive ? 'ENABLE_USER' : 'DISABLE_USER', 'user', user.id, `${newActive ? 'Activó' : 'Desactivó'} usuario: ${user.full_name}`);
   res.json({ success: true, message: newActive ? 'Usuario activado' : 'Usuario desactivado' });
+});
+
+router.patch('/users/:id/verify', async (req, res) => {
+  const user = await db.get('SELECT id, full_name, email_verified FROM users WHERE id = ?', [req.params.id]);
+  if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
+  await db.run('UPDATE users SET email_verified = 1, verification_token = NULL WHERE id = ?', [user.id]);
+  log(req, 'VERIFY_USER', 'user', user.id, `Verificó manualmente la cuenta de: ${user.full_name}`);
+  res.json({ success: true, message: 'Cuenta verificada' });
 });
 
 router.delete('/users/:id', requireSuperAdmin, async (req, res) => {
