@@ -19,6 +19,7 @@ function createTransporter(cfg) {
     secure: parseInt(cfg.smtp_port) === 465,
     auth: { user: cfg.smtp_user, pass: cfg.smtp_pass },
     tls: { rejectUnauthorized: false },
+    family: 4,
     connectionTimeout: 10000,
     greetingTimeout: 10000,
     socketTimeout: 15000,
