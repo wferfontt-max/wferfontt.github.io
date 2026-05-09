@@ -328,6 +328,20 @@ router.get('/verify-email', async (req, res) => {
   res.json({ success: true, message: '¡Cuenta verificada! Ya puedes iniciar sesión.' });
 });
 
+router.post('/resend-verification', async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: 'Email requerido' });
+  const user = await db.get('SELECT * FROM users WHERE email = ? AND is_active = 1', [email.toLowerCase().trim()]);
+  if (!user) return res.json({ success: true }); // No revelar si existe o no
+  if (user.email_verified) return res.json({ success: true, message: 'Tu cuenta ya está verificada' });
+  const crypto = require('crypto');
+  const token = crypto.randomBytes(32).toString('hex');
+  await db.run('UPDATE users SET verification_token = ? WHERE id = ?', [token, user.id]);
+  const { sendVerificationEmail } = require('../services/mailer');
+  sendVerificationEmail(user, token).catch(() => {});
+  res.json({ success: true });
+});
+
 // ── ITEMS ────────────────────────────────────────────────────────────────────
 router.get('/items', async (req, res) => {
   const category = req.query.category;
@@ -346,6 +360,7 @@ router.post('/login', async (req, res) => {
   if (!user) return res.status(401).json({ error: 'Credenciales incorrectas' });
   const bcrypt = require('bcryptjs');
   if (!bcrypt.compareSync(password, user.password_hash)) return res.status(401).json({ error: 'Credenciales incorrectas' });
+  if (!user.email_verified) return res.status(403).json({ error: 'EMAIL_NOT_VERIFIED', email: user.email });
   await db.run('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?', [user.id]);
   req.session.userId = user.id;
   res.json({ success: true, data: { id: user.id, full_name: user.full_name, email: user.email, avatar_url: user.avatar_url } });

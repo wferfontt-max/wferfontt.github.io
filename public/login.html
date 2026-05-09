@@ -109,14 +109,38 @@
           body: JSON.stringify({ email: document.getElementById('email').value.trim(), password: document.getElementById('password').value }),
         });
         const data = await res.json();
-        if (!res.ok) { showAlert(data.error || 'Error al iniciar sesión', 'error'); }
-        else { showAlert('¡Bienvenido, ' + data.data.full_name.split(' ')[0] + '!', 'success'); setTimeout(() => { location.href = new URLSearchParams(location.search).get('redirect') || '/perfil'; }, 800); }
+        if (!res.ok) {
+          if (data.error === 'EMAIL_NOT_VERIFIED') {
+            showUnverified(data.email);
+          } else {
+            showAlert(data.error || 'Error al iniciar sesión', 'error');
+          }
+        } else {
+          showAlert('¡Bienvenido, ' + data.data.full_name.split(' ')[0] + '!', 'success');
+          setTimeout(() => { location.href = new URLSearchParams(location.search).get('redirect') || '/perfil'; }, 800);
+        }
       } catch (_) { showAlert('Error de conexión', 'error'); }
       finally { btn.disabled = false; btn.textContent = 'ENTRAR'; }
     });
   });
   function showAlert(msg, type) { const el = document.getElementById('formAlert'); el.textContent = msg; el.className = 'form-alert ' + type; el.style.display = 'block'; }
   function hideAlert() { document.getElementById('formAlert').style.display = 'none'; }
+  function showUnverified(email) {
+    const el = document.getElementById('formAlert');
+    el.className = 'form-alert error';
+    el.style.display = 'block';
+    el.innerHTML = '⚠️ Debes verificar tu correo antes de iniciar sesión. <a href="#" id="resendLink" style="color:#ff4500;text-decoration:underline;margin-left:4px;">Reenviar correo de verificación</a>';
+    document.getElementById('resendLink').addEventListener('click', async (e) => {
+      e.preventDefault();
+      const link = document.getElementById('resendLink');
+      link.textContent = 'Enviando...';
+      try {
+        await fetch('/api/resend-verification', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
+        el.innerHTML = '✅ Correo de verificación reenviado. Revisa tu bandeja de entrada.';
+        el.className = 'form-alert success';
+      } catch (_) { link.textContent = 'Error al enviar, intenta de nuevo'; }
+    });
+  }
 </script>
 <script src="/js/user-nav.js"></script>
 </body>
