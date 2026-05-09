@@ -97,13 +97,13 @@ async function loadDashboard() {
     const { stats, recent_activity } = data;
 
     document.getElementById('dashStats').innerHTML = [
-      ['Jugadores', stats.players, 'primary'],
-      ['Activos', stats.active_players, 'success'],
-      ['Baneados', stats.banned_players, 'danger'],
+      ['Usuarios Web', stats.web_users, 'primary'],
+      ['Verificados', stats.verified_users, 'success'],
       ['Personajes', stats.characters, 'primary'],
       ['Facciones', stats.factions, 'primary'],
       ['Noticias', stats.news, 'primary'],
       ['Pendientes WL', stats.pending_whitelist, 'warning'],
+      ['Baneados', stats.banned_players, 'danger'],
       ['Admins', stats.admins, 'muted'],
     ].map(([label, value, cls]) => `
       <div class="stat-card">

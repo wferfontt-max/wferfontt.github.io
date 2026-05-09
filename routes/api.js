@@ -79,9 +79,8 @@ router.get('/stats', async (req, res) => {
   let discord_url = 'https://discord.gg/furiousind', server_ip = 'play.furiousin.com', server_port = '30120';
   try {
     const ru = await db.get('SELECT COUNT(*) as c FROM users');
-    const ra = await db.get('SELECT COUNT(*) as c FROM admins');
-    registered = (parseInt(String(ru?.c || 0), 10) || 0) + (parseInt(String(ra?.c || 0), 10) || 0);
-  } catch (_) {}
+    registered = parseInt(String(ru?.c ?? 0), 10) || 0;
+  } catch (e) { console.error('[stats] users count error:', e.message); }
   try {
     const rows = await db.all("SELECT key, value FROM server_settings WHERE key IN ('stats_online','stats_discord_members','discord_guild_id','discord_bot_token','discord_url','server_ip','server_port')");
     const s = rows.reduce((a, r) => { a[r.key] = r.value; return a; }, {});

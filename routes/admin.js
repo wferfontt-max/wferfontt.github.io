@@ -57,7 +57,10 @@ function log(req, action, type, id, details) {
 
 // ── STATS ─────────────────────────────────────────────────────────────────────
 router.get('/stats', async (req, res) => {
-  const [players, activePlayers, bannedPlayers, characters, factions, news, admins, pendingWL, activity] = await Promise.all([
+  const n = v => parseInt(String(v?.c ?? 0), 10) || 0;
+  const [webUsers, verifiedUsers, players, activePlayers, bannedPlayers, characters, factions, news, admins, pendingWL, activity] = await Promise.all([
+    db.get('SELECT COUNT(*) as c FROM users'),
+    db.get('SELECT COUNT(*) as c FROM users WHERE email_verified = 1'),
     db.get('SELECT COUNT(*) as c FROM players'),
     db.get("SELECT COUNT(*) as c FROM players WHERE status = 'active'"),
     db.get("SELECT COUNT(*) as c FROM players WHERE status = 'banned'"),
@@ -72,10 +75,11 @@ router.get('/stats', async (req, res) => {
     success: true,
     data: {
       stats: {
-        players: parseInt(players.c), active_players: parseInt(activePlayers.c),
-        banned_players: parseInt(bannedPlayers.c), characters: parseInt(characters.c),
-        factions: parseInt(factions.c), news: parseInt(news.c),
-        admins: parseInt(admins.c), pending_whitelist: parseInt(pendingWL.c),
+        web_users: n(webUsers), verified_users: n(verifiedUsers),
+        players: n(players), active_players: n(activePlayers),
+        banned_players: n(bannedPlayers), characters: n(characters),
+        factions: n(factions), news: n(news),
+        admins: n(admins), pending_whitelist: n(pendingWL),
       },
       recent_activity: activity,
     }
