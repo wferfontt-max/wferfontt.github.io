@@ -540,6 +540,15 @@ async function handleWebpayReturn(req, res) {
         "UPDATE purchases SET status='failed', webpay_token=? WHERE buy_order=? AND status='pending'",
         [TBK_TOKEN, TBK_ORDER]
       ).catch(() => {});
+      try {
+        const purchases = await db.all('SELECT * FROM purchases WHERE buy_order = ?', [TBK_ORDER]);
+        const userId = purchases[0]?.user_id;
+        const buyer = userId ? await db.get('SELECT * FROM users WHERE id = ?', [userId]) : null;
+        if (buyer && purchases.length) {
+          const { sendPurchaseCancelledEmail } = require('../services/mailer');
+          sendPurchaseCancelledEmail(purchases, buyer).catch(() => {});
+        }
+      } catch (_) {}
     }
     const cq = TBK_ORDER ? `&buy_order=${encodeURIComponent(TBK_ORDER)}` : '';
     return res.redirect(`/tienda/confirmacion?result=cancelled${cq}`);
@@ -575,6 +584,15 @@ async function handleWebpayReturn(req, res) {
         "UPDATE purchases SET status='failed', webpay_token=? WHERE buy_order=? AND status='pending'",
         [token_ws, resp.buy_order]
       );
+      try {
+        const purchases = await db.all('SELECT * FROM purchases WHERE buy_order = ?', [resp.buy_order]);
+        const userId = purchases[0]?.user_id;
+        const buyer = userId ? await db.get('SELECT * FROM users WHERE id = ?', [userId]) : null;
+        if (buyer && purchases.length) {
+          const { sendPurchaseFailedEmail } = require('../services/mailer');
+          sendPurchaseFailedEmail(purchases, buyer).catch(() => {});
+        }
+      } catch (_) {}
       return res.redirect(`/tienda/confirmacion?buy_order=${encodeURIComponent(resp.buy_order)}&result=failed`);
     }
   } catch (err) {

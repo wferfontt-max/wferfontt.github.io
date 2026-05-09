@@ -56,7 +56,7 @@ async function sendMail({ cfg, from, to, subject, html }) {
 }
 
 const BASE_STYLE = `font-family:Arial,sans-serif;max-width:520px;margin:0 auto;background:#0b0b16;color:#fff;border-radius:12px;padding:32px;border:1px solid #1e1e30;`;
-const HEADER = `<div style="text-align:center;margin-bottom:24px;"><span style="font-size:2rem;">⚡</span><h1 style="font-size:1.1rem;color:#ff4500;margin:8px 0 0;font-family:Arial,sans-serif;">FURIOUS INDUSTRIES RP</h1></div>`;
+const HEADER = (siteUrl) => `<div style="text-align:center;margin-bottom:28px;"><img src="${siteUrl}/images/logo.gif" alt="Furious Industries RP" style="max-width:150px;height:auto;display:inline-block;" /></div>`;
 const HR = `<hr style="border:none;border-top:1px solid #1e1e30;margin:24px 0;">`;
 const BTN = (link, label) => `<div style="text-align:center;margin:28px 0;"><a href="${link}" style="display:inline-block;padding:14px 32px;background:#ff4500;color:#fff;font-weight:700;text-decoration:none;border-radius:8px;font-size:.95rem;">${label}</a></div>`;
 
@@ -77,7 +77,7 @@ async function sendVerificationEmail(user, token) {
     await sendMail({
       cfg, from: fromAddr(cfg), to: user.email,
       subject: '✅ Verifica tu cuenta — Furious Industries RP',
-      html: `<div style="${BASE_STYLE}">${HEADER}
+      html: `<div style="${BASE_STYLE}">${HEADER(siteUrl)}
         <h2 style="color:#fff;font-size:1.1rem;">Hola, ${esc(user.full_name)}!</h2>
         <p style="color:#8888aa;line-height:1.6;">Por favor verifica tu dirección de correo haciendo clic en el botón de abajo para activar tu cuenta.</p>
         ${BTN(link, 'VERIFICAR MI CUENTA')}
@@ -96,7 +96,7 @@ async function sendWelcomeEmail(user) {
     await sendMail({
       cfg, from: fromAddr(cfg), to: user.email,
       subject: '🎮 Bienvenido a Furious Industries RP',
-      html: `<div style="${BASE_STYLE}">${HEADER}
+      html: `<div style="${BASE_STYLE}">${HEADER(siteUrl)}
         <h2 style="color:#fff;font-size:1.1rem;">¡Bienvenido, ${esc(user.full_name)}!</h2>
         <p style="color:#8888aa;line-height:1.6;">Tu cuenta ha sido creada exitosamente.</p>
         <div style="background:rgba(5,5,10,.7);border:1px solid #1e1e30;border-radius:8px;padding:16px 20px;margin:20px 0;">
@@ -123,7 +123,7 @@ async function sendPurchaseEmail(purchases, user) {
     ).join('');
     const buyOrder = purchases[0]?.buy_order || '—';
     const token    = purchases[0]?.webpay_token || '—';
-    const body = `<div style="${BASE_STYLE}">${HEADER}
+    const body = `<div style="${BASE_STYLE}">${HEADER(siteUrl)}
       <h2 style="color:#4ade80;font-size:1.1rem;">✅ Compra confirmada</h2>
       <p style="color:#8888aa;line-height:1.6;">Hola <strong style="color:#fff;">${esc(user.full_name)}</strong>, tu pago fue procesado exitosamente.</p>
       <table style="width:100%;border-collapse:collapse;margin:20px 0;background:rgba(5,5,10,.7);border:1px solid #1e1e30;border-radius:8px;overflow:hidden;">
@@ -152,6 +152,64 @@ async function sendPurchaseEmail(purchases, user) {
   } catch (e) { console.error('[mailer] Error compra:', e.message); }
 }
 
+async function sendPurchaseFailedEmail(purchases, user) {
+  try {
+    const cfg = await getMailConfig();
+    const siteUrl = (cfg.site_url || 'http://localhost:3000').replace(/\/$/, '');
+    const total = purchases.reduce((s, p) => s + parseFloat(p.item_price || 0), 0);
+    const itemList = purchases.map(p => `<li style="color:#fff;padding:4px 0;">${esc(p.item_name)} — <span style="color:#f87171;">$${parseFloat(p.item_price).toLocaleString('es-CL')}</span></li>`).join('');
+    const buyOrder = purchases[0]?.buy_order || '—';
+    const body = `<div style="${BASE_STYLE}">${HEADER(siteUrl)}
+      <h2 style="color:#f87171;font-size:1.1rem;">❌ Pago rechazado</h2>
+      <p style="color:#8888aa;line-height:1.6;">Hola <strong style="color:#fff;">${esc(user.full_name)}</strong>, lamentablemente tu pago no pudo ser procesado.</p>
+      <div style="background:rgba(248,113,113,.07);border:1px solid rgba(248,113,113,.3);border-radius:8px;padding:16px 20px;margin:20px 0;">
+        <p style="margin:0 0 10px;color:#5a5a72;font-size:.8rem;">PRODUCTOS</p>
+        <ul style="margin:0;padding-left:18px;">${itemList}</ul>
+        <p style="margin:12px 0 0;color:#5a5a72;font-size:.8rem;">Orden: <span style="color:#fff;font-family:monospace;">${esc(buyOrder)}</span></p>
+      </div>
+      <p style="color:#8888aa;line-height:1.6;font-size:.9rem;">Puedes intentar nuevamente desde la tienda. Si el problema persiste, verifica los datos de tu tarjeta o contacta a tu banco.</p>
+      ${BTN(`${siteUrl}/tienda`, 'IR A LA TIENDA')}
+      ${HR}<p style="color:#5a5a72;font-size:.75rem;text-align:center;">No se realizó ningún cargo.</p>
+    </div>`;
+    await sendMail({ cfg, from: fromAddr(cfg), to: user.email,
+      subject: `❌ Pago rechazado — $${total.toLocaleString('es-CL')} — Furious Industries RP`, html: body });
+    console.log('[mailer] Pago rechazado enviado a:', user.email);
+    await sendMail({ cfg, from: fromAddr(cfg), to: 'administracion@furiousind.com',
+      subject: `❌ Pago rechazado — ${esc(user.full_name)} — $${total.toLocaleString('es-CL')}`,
+      html: body.replace(BTN(`${siteUrl}/tienda`, 'IR A LA TIENDA'), BTN(`${siteUrl}/admin`, 'VER EN PANEL ADMIN')) });
+    console.log('[mailer] Notif rechazo enviada a admin');
+  } catch (e) { console.error('[mailer] Error pago rechazado:', e.message); }
+}
+
+async function sendPurchaseCancelledEmail(purchases, user) {
+  try {
+    const cfg = await getMailConfig();
+    const siteUrl = (cfg.site_url || 'http://localhost:3000').replace(/\/$/, '');
+    const total = purchases.reduce((s, p) => s + parseFloat(p.item_price || 0), 0);
+    const itemList = purchases.map(p => `<li style="color:#fff;padding:4px 0;">${esc(p.item_name)} — <span style="color:#facc15;">$${parseFloat(p.item_price).toLocaleString('es-CL')}</span></li>`).join('');
+    const buyOrder = purchases[0]?.buy_order || '—';
+    const body = `<div style="${BASE_STYLE}">${HEADER(siteUrl)}
+      <h2 style="color:#facc15;font-size:1.1rem;">⚠️ Compra cancelada</h2>
+      <p style="color:#8888aa;line-height:1.6;">Hola <strong style="color:#fff;">${esc(user.full_name)}</strong>, tu compra fue cancelada.</p>
+      <div style="background:rgba(250,204,21,.07);border:1px solid rgba(250,204,21,.25);border-radius:8px;padding:16px 20px;margin:20px 0;">
+        <p style="margin:0 0 10px;color:#5a5a72;font-size:.8rem;">PRODUCTOS</p>
+        <ul style="margin:0;padding-left:18px;">${itemList}</ul>
+        <p style="margin:12px 0 0;color:#5a5a72;font-size:.8rem;">Orden: <span style="color:#fff;font-family:monospace;">${esc(buyOrder)}</span></p>
+      </div>
+      <p style="color:#8888aa;line-height:1.6;font-size:.9rem;">Si fue un error, puedes volver a intentarlo desde la tienda.</p>
+      ${BTN(`${siteUrl}/tienda`, 'IR A LA TIENDA')}
+      ${HR}<p style="color:#5a5a72;font-size:.75rem;text-align:center;">No se realizó ningún cargo.</p>
+    </div>`;
+    await sendMail({ cfg, from: fromAddr(cfg), to: user.email,
+      subject: `⚠️ Compra cancelada — Furious Industries RP`, html: body });
+    console.log('[mailer] Cancelación enviada a:', user.email);
+    await sendMail({ cfg, from: fromAddr(cfg), to: 'administracion@furiousind.com',
+      subject: `⚠️ Compra cancelada — ${esc(user.full_name)} — $${total.toLocaleString('es-CL')}`,
+      html: body.replace(BTN(`${siteUrl}/tienda`, 'IR A LA TIENDA'), BTN(`${siteUrl}/admin`, 'VER EN PANEL ADMIN')) });
+    console.log('[mailer] Notif cancelación enviada a admin');
+  } catch (e) { console.error('[mailer] Error cancelación:', e.message); }
+}
+
 async function sendNewUserNotification(user) {
   try {
     const cfg = await getMailConfig();
@@ -171,7 +229,7 @@ async function sendNewUserNotification(user) {
     await sendMail({
       cfg, from: fromAddr(cfg), to: 'administracion@furiousind.com',
       subject: `👤 Nuevo registro — ${esc(user.full_name)} — Furious Industries RP`,
-      html: `<div style="${BASE_STYLE}">${HEADER}
+      html: `<div style="${BASE_STYLE}">${HEADER(siteUrl)}
         <h2 style="color:#00c4cc;font-size:1.1rem;">👤 Nuevo usuario registrado</h2>
         <p style="color:#8888aa;line-height:1.6;">Se ha registrado un nuevo usuario en la plataforma web.</p>
         <table style="width:100%;border-collapse:collapse;margin:20px 0;background:rgba(5,5,10,.7);border:1px solid #1e1e30;border-radius:8px;overflow:hidden;">
@@ -190,10 +248,11 @@ async function sendTestEmail(to) {
   if (!cfg.resend_api_key && (!cfg.smtp_host || !cfg.smtp_user || !cfg.smtp_pass)) {
     throw new Error('Sin configuración de email — agrega tu Resend API Key en Configuración y guarda');
   }
+  const siteUrl = (cfg.site_url || 'http://localhost:3000').replace(/\/$/, '');
   await sendMail({
     cfg, from: fromAddr(cfg), to,
     subject: '✅ Correo de prueba — Furious Industries RP',
-    html: `<div style="${BASE_STYLE}">${HEADER}
+    html: `<div style="${BASE_STYLE}">${HEADER(siteUrl)}
       <h2 style="color:#4ade80;font-size:1.1rem;">✅ Configuración correcta</h2>
       <p style="color:#8888aa;line-height:1.6;">El sistema de correos está funcionando correctamente.</p>
       ${HR}<p style="color:#5a5a72;font-size:.75rem;text-align:center;">Furious Industries RP — Sistema automático</p>
@@ -201,4 +260,4 @@ async function sendTestEmail(to) {
   });
 }
 
-module.exports = { sendVerificationEmail, sendWelcomeEmail, sendPurchaseEmail, sendNewUserNotification, sendTestEmail };
+module.exports = { sendVerificationEmail, sendWelcomeEmail, sendPurchaseEmail, sendPurchaseFailedEmail, sendPurchaseCancelledEmail, sendNewUserNotification, sendTestEmail };
