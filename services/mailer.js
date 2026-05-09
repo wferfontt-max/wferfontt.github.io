@@ -243,6 +243,27 @@ async function sendNewUserNotification(user) {
   } catch (e) { console.error('[mailer] Error notif registro:', e.message); }
 }
 
+async function sendPasswordResetEmail(user, token) {
+  try {
+    const cfg = await getMailConfig();
+    const siteUrl = (cfg.site_url || 'http://localhost:3000').replace(/\/$/, '');
+    const link = `${siteUrl}/reset-password?token=${token}`;
+    await sendMail({
+      cfg, from: fromAddr(cfg), to: user.email,
+      subject: '🔑 Restablecer contraseña — Furious Industries RP',
+      html: `<div style="${BASE_STYLE}">${HEADER(siteUrl)}
+        <h2 style="color:#fff;font-size:1.1rem;">Restablecer contraseña</h2>
+        <p style="color:#8888aa;line-height:1.6;">Hola <strong style="color:#fff;">${esc(user.full_name)}</strong>, recibimos una solicitud para restablecer la contraseña de tu cuenta.</p>
+        ${BTN(link, 'RESTABLECER CONTRASEÑA')}
+        <p style="color:#5a5a72;font-size:.8rem;">Si el botón no funciona, copia este enlace:<br><a href="${link}" style="color:#ff4500;word-break:break-all;">${link}</a></p>
+        ${HR}
+        <p style="color:#5a5a72;font-size:.75rem;text-align:center;">Este enlace expira en 1 hora. Si no solicitaste este cambio, ignora este correo.</p>
+      </div>`,
+    });
+    console.log('[mailer] Reset contraseña enviado a:', user.email);
+  } catch (e) { console.error('[mailer] Error reset contraseña:', e.message); }
+}
+
 async function sendTestEmail(to) {
   const cfg = await getMailConfig();
   if (!cfg.resend_api_key && (!cfg.smtp_host || !cfg.smtp_user || !cfg.smtp_pass)) {
@@ -260,4 +281,4 @@ async function sendTestEmail(to) {
   });
 }
 
-module.exports = { sendVerificationEmail, sendWelcomeEmail, sendPurchaseEmail, sendPurchaseFailedEmail, sendPurchaseCancelledEmail, sendNewUserNotification, sendTestEmail };
+module.exports = { sendVerificationEmail, sendWelcomeEmail, sendPurchaseEmail, sendPurchaseFailedEmail, sendPurchaseCancelledEmail, sendNewUserNotification, sendPasswordResetEmail, sendTestEmail };

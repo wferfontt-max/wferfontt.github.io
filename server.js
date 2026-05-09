@@ -65,6 +65,7 @@ app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'public', 'log
 app.get('/perfil', (req, res) => res.sendFile(path.join(__dirname, 'public', 'perfil.html')));
 app.get('/tienda/confirmacion', (req, res) => res.sendFile(path.join(__dirname, 'public', 'tienda-confirmacion.html')));
 app.get('/verificar', (req, res) => res.sendFile(path.join(__dirname, 'public', 'verificar.html')));
+app.get('/reset-password', (req, res) => res.sendFile(path.join(__dirname, 'public', 'reset-password.html')));
 
 app.use((req, res) => {
   if (req.path.startsWith('/api')) return res.status(404).json({ error: 'Ruta no encontrada' });

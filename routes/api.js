@@ -342,6 +342,35 @@ router.post('/resend-verification', async (req, res) => {
   res.json({ success: true });
 });
 
+router.post('/forgot-password', async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: 'Email requerido' });
+  const user = await db.get('SELECT * FROM users WHERE email = ? AND is_active = 1', [email.toLowerCase().trim()]);
+  if (!user) return res.status(404).json({ error: 'Este correo no está registrado' });
+  const crypto = require('crypto');
+  const token = crypto.randomBytes(32).toString('hex');
+  const expires = new Date(Date.now() + 60 * 60 * 1000).toISOString(); // 1 hora
+  await db.run('UPDATE users SET reset_token = ?, reset_token_expires = ? WHERE id = ?', [token, expires, user.id]);
+  const { sendPasswordResetEmail } = require('../services/mailer');
+  sendPasswordResetEmail(user, token).catch(() => {});
+  res.json({ success: true });
+});
+
+router.post('/reset-password', async (req, res) => {
+  const { token, password } = req.body;
+  if (!token || !password) return res.status(400).json({ error: 'Datos incompletos' });
+  if (password.length < 6) return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
+  const user = await db.get('SELECT * FROM users WHERE reset_token = ?', [token]);
+  if (!user) return res.status(400).json({ error: 'Enlace inválido o ya utilizado' });
+  if (!user.reset_token_expires || new Date(user.reset_token_expires) < new Date()) {
+    return res.status(400).json({ error: 'El enlace ha expirado. Solicita uno nuevo.' });
+  }
+  const bcrypt = require('bcryptjs');
+  const hash = bcrypt.hashSync(password, 10);
+  await db.run('UPDATE users SET password_hash = ?, reset_token = NULL, reset_token_expires = NULL WHERE id = ?', [hash, user.id]);
+  res.json({ success: true, message: '¡Contraseña actualizada! Ya puedes iniciar sesión.' });
+});
+
 // ── ITEMS ────────────────────────────────────────────────────────────────────
 router.get('/items', async (req, res) => {
   const category = req.query.category;

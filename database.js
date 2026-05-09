@@ -242,6 +242,8 @@ async function initDatabase() {
   for (const [table, col, def] of [
     ['news', 'image_url', 'TEXT'],
     ['news', 'video_url', 'TEXT'],
+    ['users', 'reset_token', 'TEXT'],
+    ['users', 'reset_token_expires', 'TEXT'],
   ]) {
     try { await db.exec(`ALTER TABLE ${table} ADD COLUMN ${col} ${def}`); } catch (_) {}
   }
