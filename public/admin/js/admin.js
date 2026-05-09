@@ -287,13 +287,13 @@ async function loadSettings() {
     settingsData = {};
     data.forEach(s => settingsData[s.key] = s);
     const tbkKeys  = ['transbank_environment','transbank_commerce_code','transbank_api_key'];
-    const smtpKeys = ['site_url','smtp_host','smtp_port','smtp_user','smtp_pass','smtp_from'];
+    const smtpKeys = ['site_url','resend_api_key','smtp_from','smtp_host','smtp_port','smtp_user','smtp_pass'];
     const regular  = data.filter(s => !s.key.startsWith('story_') && !s.key.startsWith('feature') && !tbkKeys.includes(s.key) && !smtpKeys.includes(s.key));
     const tbk      = data.filter(s =>  tbkKeys.includes(s.key));
     const story    = data.filter(s =>  s.key.startsWith('story_'));
     const features = data.filter(s =>  s.key.startsWith('feature'));
-    const smtpDefaults = { site_url:'https://furious-industries.com', smtp_host:'smtp.gmail.com', smtp_port:'587', smtp_user:'', smtp_pass:'', smtp_from:'' };
-    const smtpLabels   = { site_url:'URL pública del sitio', smtp_host:'SMTP Host', smtp_port:'SMTP Puerto', smtp_user:'SMTP Usuario (correo)', smtp_pass:'SMTP Contraseña (App Password)', smtp_from:'Email remitente (From)' };
+    const smtpDefaults = { site_url:'https://furious-industries.com', resend_api_key:'', smtp_from:'', smtp_host:'smtp.gmail.com', smtp_port:'587', smtp_user:'', smtp_pass:'' };
+    const smtpLabels   = { site_url:'URL pública del sitio', resend_api_key:'Resend API Key (recomendado — resend.com)', smtp_from:'Email remitente (From)', smtp_host:'SMTP Host', smtp_port:'SMTP Puerto', smtp_user:'SMTP Usuario (correo)', smtp_pass:'SMTP Contraseña (App Password)' };
     smtpKeys.forEach(k => { if (!settingsData[k]) settingsData[k] = { key: k, value: smtpDefaults[k] || '', description: smtpLabels[k] }; });
     document.getElementById('settingsGrid').innerHTML =
       regular.map(s => `
@@ -304,14 +304,14 @@ async function loadSettings() {
         </div>
       `).join('') +
       `<div class="settings-item" style="grid-column:1/-1;border-top:1px solid rgba(255,255,255,0.08);padding-top:22px;margin-top:12px;">
-        <label style="font-size:1.05rem;color:#00c4cc">✉️ Configuración de Correo (SMTP)</label>
-        <div class="setting-desc">Para enviar notificaciones y correos de verificación. Con Gmail usa <strong>smtp.gmail.com</strong>, puerto <strong>587</strong> y una <strong>Contraseña de Aplicación</strong> (no tu contraseña normal).</div>
+        <label style="font-size:1.05rem;color:#00c4cc">✉️ Configuración de Correo</label>
+        <div class="setting-desc">Recomendado: usa <strong>Resend</strong> (resend.com) — gratis hasta 3.000 emails/mes, sin problemas de SMTP. Solo agrega la API Key. Alternativamente, configura SMTP con Gmail (smtp.gmail.com, puerto 587, Contraseña de Aplicación).</div>
       </div>` +
       smtpKeys.map(k => {
         const s = settingsData[k];
         return `<div class="settings-item">
           <label>${esc(smtpLabels[k])}</label>
-          <input type="${k === 'smtp_pass' ? 'password' : 'text'}" id="setting-${k}" value="${esc(s.value)}" placeholder="${k === 'smtp_host' ? 'smtp.gmail.com' : k === 'smtp_port' ? '587' : k === 'site_url' ? 'https://furious-industries.com' : ''}" />
+          <input type="${k === 'smtp_pass' || k === 'resend_api_key' ? 'password' : 'text'}" id="setting-${k}" value="${esc(s.value)}" placeholder="${k === 'smtp_host' ? 'smtp.gmail.com' : k === 'smtp_port' ? '587' : k === 'site_url' ? 'https://furious-industries.com' : k === 'resend_api_key' ? 're_xxxxxxxxxxxxxxxxxxxx' : k === 'smtp_from' ? 'noreply@furiousind.com' : ''}" />
         </div>`;
       }).join('') +
       (tbk.length ? `
@@ -357,8 +357,8 @@ async function saveSettings() {
     const el = document.getElementById(`setting-${key}`);
     if (el) settings[key] = el.value;
   });
-  // Include SMTP fields even if not in settingsData yet
-  ['site_url','smtp_host','smtp_port','smtp_user','smtp_pass','smtp_from'].forEach(key => {
+  // Include mail fields even if not in settingsData yet
+  ['site_url','resend_api_key','smtp_from','smtp_host','smtp_port','smtp_user','smtp_pass'].forEach(key => {
     const el = document.getElementById(`setting-${key}`);
     if (el && !(key in settings)) settings[key] = el.value;
   });
