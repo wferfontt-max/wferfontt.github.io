@@ -286,19 +286,34 @@ async function loadSettings() {
     const { data } = await api('GET', '/api/admin/settings');
     settingsData = {};
     data.forEach(s => settingsData[s.key] = s);
-    const tbkKeys = ['transbank_environment','transbank_commerce_code','transbank_api_key'];
-    const regular   = data.filter(s => !s.key.startsWith('story_') && !s.key.startsWith('feature') && !tbkKeys.includes(s.key));
-    const tbk       = data.filter(s =>  tbkKeys.includes(s.key));
-    const story     = data.filter(s =>  s.key.startsWith('story_'));
-    const features  = data.filter(s =>  s.key.startsWith('feature'));
+    const tbkKeys  = ['transbank_environment','transbank_commerce_code','transbank_api_key'];
+    const smtpKeys = ['site_url','smtp_host','smtp_port','smtp_user','smtp_pass','smtp_from'];
+    const regular  = data.filter(s => !s.key.startsWith('story_') && !s.key.startsWith('feature') && !tbkKeys.includes(s.key) && !smtpKeys.includes(s.key));
+    const tbk      = data.filter(s =>  tbkKeys.includes(s.key));
+    const story    = data.filter(s =>  s.key.startsWith('story_'));
+    const features = data.filter(s =>  s.key.startsWith('feature'));
+    const smtpDefaults = { site_url:'https://furious-industries.com', smtp_host:'smtp.gmail.com', smtp_port:'587', smtp_user:'', smtp_pass:'', smtp_from:'' };
+    const smtpLabels   = { site_url:'URL pública del sitio', smtp_host:'SMTP Host', smtp_port:'SMTP Puerto', smtp_user:'SMTP Usuario (correo)', smtp_pass:'SMTP Contraseña (App Password)', smtp_from:'Email remitente (From)' };
+    smtpKeys.forEach(k => { if (!settingsData[k]) settingsData[k] = { key: k, value: smtpDefaults[k] || '', description: smtpLabels[k] }; });
     document.getElementById('settingsGrid').innerHTML =
       regular.map(s => `
         <div class="settings-item">
           <label>${esc(s.description || s.key)}</label>
           <div class="setting-desc">Clave: <code>${esc(s.key)}</code></div>
-          <input type="${s.key === 'smtp_pass' ? 'password' : 'text'}" id="setting-${s.key}" value="${esc(s.value)}" />
+          <input type="text" id="setting-${s.key}" value="${esc(s.value)}" />
         </div>
       `).join('') +
+      `<div class="settings-item" style="grid-column:1/-1;border-top:1px solid rgba(255,255,255,0.08);padding-top:22px;margin-top:12px;">
+        <label style="font-size:1.05rem;color:#00c4cc">✉️ Configuración de Correo (SMTP)</label>
+        <div class="setting-desc">Para enviar notificaciones y correos de verificación. Con Gmail usa <strong>smtp.gmail.com</strong>, puerto <strong>587</strong> y una <strong>Contraseña de Aplicación</strong> (no tu contraseña normal).</div>
+      </div>` +
+      smtpKeys.map(k => {
+        const s = settingsData[k];
+        return `<div class="settings-item">
+          <label>${esc(smtpLabels[k])}</label>
+          <input type="${k === 'smtp_pass' ? 'password' : 'text'}" id="setting-${k}" value="${esc(s.value)}" placeholder="${k === 'smtp_host' ? 'smtp.gmail.com' : k === 'smtp_port' ? '587' : k === 'site_url' ? 'https://furious-industries.com' : ''}" />
+        </div>`;
+      }).join('') +
       (tbk.length ? `
         <div class="settings-item" style="grid-column:1/-1;border-top:1px solid rgba(255,255,255,0.08);padding-top:22px;margin-top:12px;">
           <label style="font-size:1.05rem;color:#facc15">Transbank WebPay Plus</label>

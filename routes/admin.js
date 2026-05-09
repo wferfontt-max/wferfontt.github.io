@@ -351,11 +351,28 @@ router.get('/settings', async (req, res) => {
 router.put('/settings', async (req, res) => {
   const { settings } = req.body;
   if (!settings || typeof settings !== 'object') return res.status(400).json({ error: 'Formato inválido' });
-  for (const [key, value] of Object.entries(settings)) {
-    await db.run('UPDATE server_settings SET value = ?, updated_at = CURRENT_TIMESTAMP WHERE key = ?', [value, key]);
+  try {
+    for (const [key, value] of Object.entries(settings)) {
+      if (db.isPg) {
+        await db.run(
+          "INSERT INTO server_settings (key, value, description) VALUES (?, ?, '') ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = CURRENT_TIMESTAMP",
+          [key, value]
+        );
+      } else {
+        const exists = await db.get('SELECT 1 FROM server_settings WHERE key = ?', [key]);
+        if (exists) {
+          await db.run('UPDATE server_settings SET value = ?, updated_at = CURRENT_TIMESTAMP WHERE key = ?', [value, key]);
+        } else {
+          await db.run('INSERT INTO server_settings (key, value, description) VALUES (?, ?, ?)', [key, value, key]);
+        }
+      }
+    }
+    log(req, 'UPDATE_SETTINGS', 'settings', null, 'Actualizó configuración');
+    res.json({ success: true, message: 'Configuración guardada' });
+  } catch (e) {
+    console.error('[settings save]', e.message);
+    res.status(500).json({ error: 'Error al guardar: ' + e.message });
   }
-  log(req, 'UPDATE_SETTINGS', 'settings', null, 'Actualizó configuración');
-  res.json({ success: true, message: 'Configuración guardada' });
 });
 
 // ── ADMINS (superadmin only) ───────────────────────────────────────────────────
