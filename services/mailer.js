@@ -1,5 +1,10 @@
 const nodemailer = require('nodemailer');
+const dns = require('dns');
 const db = require('../db');
+
+function lookupIPv4(hostname, options, callback) {
+  dns.lookup(hostname, { ...options, family: 4 }, callback);
+}
 
 async function getSmtpConfig() {
   const rows = await db.all(
@@ -19,7 +24,7 @@ function createTransporter(cfg) {
     secure: parseInt(cfg.smtp_port) === 465,
     auth: { user: cfg.smtp_user, pass: cfg.smtp_pass },
     tls: { rejectUnauthorized: false },
-    family: 4,
+    lookup: lookupIPv4,
     connectionTimeout: 10000,
     greetingTimeout: 10000,
     socketTimeout: 15000,
