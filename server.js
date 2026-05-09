@@ -29,8 +29,8 @@ if (process.env.DATABASE_URL) {
 app.set('trust proxy', 1);
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors({ origin: true, credentials: true }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '5mb' }));
+app.use(express.urlencoded({ extended: true, limit: '5mb' }));
 app.use(session({
   store: sessionStore,
   secret: process.env.SESSION_SECRET || 'furious-industries-secret-key-2024',
