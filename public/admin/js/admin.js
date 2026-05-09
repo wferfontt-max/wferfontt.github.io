@@ -369,21 +369,36 @@ async function saveSettings() {
 }
 
 async function sendTestEmail() {
-  const btn = document.querySelector('button[onclick="sendTestEmail()"]');
+  const btn = document.getElementById('testEmailBtn');
   const result = document.getElementById('testEmailResult');
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Enviando...'; }
   if (result) result.textContent = '';
   try {
-    const r = await api('POST', '/api/admin/test-email', {});
-    if (result) { result.textContent = '✅ ' + r.message; result.style.color = '#4ade80'; }
-    showToast(r.message, 'success');
+    const resp = await fetch('/api/admin/test-email', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+    });
+    const data = await resp.json();
+    if (resp.ok) {
+      if (result) { result.textContent = '✅ ' + data.message; result.style.color = '#4ade80'; }
+      showToast(data.message, 'success');
+    } else {
+      if (result) { result.textContent = '❌ ' + (data.error || 'Error desconocido'); result.style.color = '#f87171'; }
+      showToast(data.error || 'Error al enviar', 'error');
+    }
   } catch (e) {
-    if (result) { result.textContent = '❌ ' + e.message; result.style.color = '#f87171'; }
-    showToast(e.message, 'error');
+    if (result) { result.textContent = '❌ Error de red: ' + e.message; result.style.color = '#f87171'; }
+    showToast('Error de red: ' + e.message, 'error');
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = '✉️ Enviar correo de prueba'; }
   }
 }
+document.addEventListener('DOMContentLoaded', () => {
+  const btn = document.getElementById('testEmailBtn');
+  if (btn) btn.addEventListener('click', sendTestEmail);
+});
 
 /* ── Admins ────────────────────────────────────────────────── */
 async function loadAdmins() {
