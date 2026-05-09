@@ -56,7 +56,7 @@ async function sendMail({ cfg, from, to, subject, html }) {
 }
 
 const BASE_STYLE = `font-family:Arial,sans-serif;max-width:520px;margin:0 auto;background:#0b0b16;color:#fff;border-radius:12px;padding:32px;border:1px solid #1e1e30;`;
-const HEADER = (siteUrl) => `<div style="text-align:center;margin-bottom:28px;"><img src="${siteUrl}/images/logo.gif" alt="Furious Industries RP" style="max-width:150px;height:auto;display:inline-block;" /></div>`;
+const HEADER = (siteUrl) => `<div style="text-align:center;margin-bottom:28px;"><img src="${siteUrl}/img/logo.gif" alt="Furious Industries RP" style="max-width:180px;height:auto;display:inline-block;" /></div>`;
 const HR = `<hr style="border:none;border-top:1px solid #1e1e30;margin:24px 0;">`;
 const BTN = (link, label) => `<div style="text-align:center;margin:28px 0;"><a href="${link}" style="display:inline-block;padding:14px 32px;background:#ff4500;color:#fff;font-weight:700;text-decoration:none;border-radius:8px;font-size:.95rem;">${label}</a></div>`;
 
