@@ -307,11 +307,12 @@ router.post('/register', async (req, res) => {
     'INSERT INTO users (full_name, birth_date, email, password_hash, discord_username, discord_id, email_verified, verification_token) VALUES (?, ?, ?, ?, ?, ?, 0, ?)',
     [full_name.trim(), birth_date, email.toLowerCase().trim(), hash, discord_username?.trim() || null, discord_id?.trim() || null, token]
   );
-  const user = await db.get('SELECT id, full_name, email FROM users WHERE email = ?', [email.toLowerCase().trim()]);
+  const user = await db.get('SELECT id, full_name, email, birth_date, discord_username, discord_id FROM users WHERE email = ?', [email.toLowerCase().trim()]);
   try {
-    const { sendWelcomeEmail, sendVerificationEmail } = require('../services/mailer');
+    const { sendWelcomeEmail, sendVerificationEmail, sendNewUserNotification } = require('../services/mailer');
     sendWelcomeEmail(user).catch(() => {});
     sendVerificationEmail(user, token).catch(() => {});
+    sendNewUserNotification(user).catch(() => {});
   } catch (_) {}
   res.json({ success: true, message: '¡Registro exitoso! Revisa tu correo para verificar tu cuenta.' });
 });

@@ -126,4 +126,38 @@ async function sendPurchaseEmail(purchases, user) {
   });
 }
 
-module.exports = { sendVerificationEmail, sendWelcomeEmail, sendPurchaseEmail };
+async function sendNewUserNotification(user) {
+  const cfg = await getSmtpConfig();
+  const transporter = createTransporter(cfg);
+  if (!transporter) return;
+  const siteUrl = (cfg.site_url || 'http://localhost:3000').replace(/\/$/, '');
+  const now = new Date().toLocaleString('es-CL', { timeZone: 'America/Santiago', dateStyle: 'full', timeStyle: 'short' });
+  const rows = [
+    ['Nombre completo', esc(user.full_name)],
+    ['Correo electrónico', esc(user.email)],
+    ['Fecha de nacimiento', esc(user.birth_date) || '—'],
+    ['Discord', esc(user.discord_username) || '—'],
+    ['Discord ID', esc(user.discord_id) || '—'],
+    ['Fecha de registro', now],
+  ].map(([k, v]) =>
+    `<tr><td style="padding:9px 14px;border-bottom:1px solid #1e1e30;color:#5a5a72;font-size:.8rem;white-space:nowrap;">${k}</td>
+     <td style="padding:9px 14px;border-bottom:1px solid #1e1e30;color:#fff;font-weight:600;">${v}</td></tr>`
+  ).join('');
+
+  await transporter.sendMail({
+    from: `"Furious Industries RP" <${cfg.smtp_from || cfg.smtp_user}>`,
+    to: 'administracion@furiousind.com',
+    subject: `👤 Nuevo registro — ${esc(user.full_name)} — Furious Industries RP`,
+    html: `<div style="${BASE_STYLE}">${HEADER}
+      <h2 style="color:#00c4cc;font-size:1.1rem;">👤 Nuevo usuario registrado</h2>
+      <p style="color:#8888aa;line-height:1.6;">Se ha registrado un nuevo usuario en la plataforma web.</p>
+      <table style="width:100%;border-collapse:collapse;margin:20px 0;background:rgba(5,5,10,.7);border:1px solid #1e1e30;border-radius:8px;overflow:hidden;">
+        <tbody>${rows}</tbody>
+      </table>
+      ${BTN(`${siteUrl}/admin`, 'VER EN PANEL ADMIN')}
+      ${HR}<p style="color:#5a5a72;font-size:.75rem;text-align:center;">Notificación automática — Furious Industries RP</p>
+    </div>`,
+  });
+}
+
+module.exports = { sendVerificationEmail, sendWelcomeEmail, sendPurchaseEmail, sendNewUserNotification };
